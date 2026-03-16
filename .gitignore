@@ -1,0 +1,33 @@
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+
+# Generated documents
+*.pdf
+
+# Temporary files
+*.nav
+*.snm
+*.vrb
+*.xdv
+*.dvi
+*.ps
+
+# Editor settings
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+Desktop.ini

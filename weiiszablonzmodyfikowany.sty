@@ -1,0 +1,269 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{weiiszablonzmodyfikowany}[2025/03/01 package <weiiszablonzmodyfikowany>]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% %
+%%% % weiiszablon.sty
+%%% %
+%%% % Plik stylu dla pracy dyplomowej 
+%%% % Wydziału Elektrotechniki i Informatyki
+%%% % Politechniki Rzeszowskiej
+%%% % zmodyfikowany przez: Dawid Kalandyk
+%%% %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc} 			% kodowanie 
+\usepackage[T1]{fontenc} 				% czcionka Timnes New Roman
+\usepackage[a4paper,left=3.5cm,right=2cm,top=2cm,bottom=2.5cm,includefoot=false,includehead=false,footskip=1.16cm]{geometry} 	% wymiary strony
+\usepackage{courier} 					% czcionka courier
+\usepackage{mathptmx} 					% pakiet wymagany do czcionki Times New Roman
+\usepackage{graphicx} 					% pakiet graficzny
+\usepackage{enumitem} 					% spis treści i listy
+\usepackage{etoolbox} 					% pakiet umożliwiający edycję domyślnych komend
+\usepackage{amsmath} 					% pakiet matematyczny
+\usepackage{color} 						% podstawowe kolory
+\usepackage{hyperref} 				    % aktywne linki
+\usepackage[final]{listingsutf8}                   % styl dla formatowania kodów źródłowych
+\usepackage{tikz}
+\usepackage{bm}							% dla pogrubionych i pochylonych czcionek w środowisku matematycznym
+
+\usepackage{caption}
+\usepackage{lmodern}
+
+% kropki po numeracji rozdziałów w spisie treści
+\usepackage{tocloft} 	
+\usepackage{chngcntr}				
+\usepackage[hyphens]{xurl}
+% \def\UrlBreaks{\do\/\do-}
+% \usepackage[unicode=true,naturalnames,psdextra]{hyperref}
+
+\renewcommand{\cftsecaftersnum}{.}
+\renewcommand{\cftsubsecaftersnum}{.}
+\renewcommand{\cftsubsubsecaftersnum}{.}
+\newcommand{\komentarz}[1]{}
+% zmiana odległości przed rozdziałami
+\makeatletter 
+\newskip\old@cftbeforesecskip
+\old@cftbeforesecskip\cftbeforesecskip
+\let\old@l@section\l@section
+\def\l@section#1#2{\old@l@section{#1}{#2}\cftbeforesecskip0pt}
+\makeatother
+
+% zmiana domyślnego formatowania tytułów w spisie treści
+%\renewcommand{\cftsecfont}{} 
+%\renewcommand\cftsecpagefont{\normalfont}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+
+\linespread{1.5} % interlinia 1.5				
+
+
+\lstset{ 
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+  basicstyle=\linespread{0.85}\footnotesize\ttfamily,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=t,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  columns=flexible,
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  firstnumber=1,                   % start line enumeration with line 1
+  frame=single,	                   % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},       % keyword style
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=2	                   % sets default tabsize to 2 spaces
+  }
+
+% numer strony bez komend formatowania, aby nie generować ostrzeżeń hyperref
+\renewcommand*{\thepage}{\arabic{page}}
+
+%parametry dla kodów źródłowych
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+%%%%%%%% odsuniecie wypunktowania
+\setlist[enumerate,1]{label=\arabic*),leftmargin=1.25cm,itemsep=0pt,topsep=0pt}
+\setlist[itemize,1]{label={--},labelsep=0.4cm,leftmargin=1.25cm,itemsep=0pt,topsep=0pt}
+\setlist[itemize,2]{label={--},labelsep=0.4cm,leftmargin=0.6cm,itemsep=0pt,topsep=0pt}
+\setlist{noitemsep}
+\setlist{topsep=0pt}
+
+% do sztucznego zwiekszenia poziomu zaglebienia srodowiska itemize
+% / do przejscia na poziom 2
+\makeatletter
+\newcommand{\advanceitemizelevel}{\advance\@itemdepth\@ne}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setlength\parindent{1.25cm}		% wcięcie 1.25 cm
+\newlength\mylen
+\setlength\mylen{\parindent}
+
+\definecolor{niebieski}{RGB}{0,130,150} %kolor niebieski
+\definecolor{mygray}{gray}{0.6} 		% kolor szary
+
+\usepackage[compact]{titlesec} 
+%zmiana czcionki i odstępów w tytułach rozdziałów
+
+\titleformat{\section}
+  {\normalfont\fontsize{16pt}{16pt}\bfseries}
+  {\makebox[\mylen][l]{\thesection.}}
+  {0pt}
+  {}
+
+\titleformat{\subsection}
+  {\normalfont\fontsize{14pt}{14pt}\bfseries}
+  {\makebox[\mylen][l]{\thesubsection.}}
+  {0pt}
+  {}
+
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{12pt}{12pt}\bfseries}
+  {\makebox[\mylen][l]{\thesubsubsection.}}
+  {0pt}
+  {}
+
+\titlespacing*{\section}{0pt}{*0}{14pt} %zmiana odstępów po tytułach rozdziałów
+\titlespacing*{\subsection}{0pt}{14pt}{12pt}
+\titlespacing*{\subsubsection}{0pt}{12pt}{0pt}
+
+% komenda dla pustej strony
+\newcommand\blankpage{ 
+	\null
+	\thispagestyle{empty}
+	\newpage}
+
+\addto\captionspolish{\renewcommand{\figurename}{Rys.}} %zmiana domyślnego podpisu dla rysunku
+
+\renewcommand{\thetable}{\arabic{section}.\arabic{table}} %zmiana domyślnej numeracji
+\renewcommand{\thefigure}{\arabic{section}.\arabic{figure}}
+\renewcommand{\theequation}{\arabic{section}.\arabic{equation}}
+
+\AtBeginEnvironment{figure}{}\AtEndEnvironment{figure}{\addvspace{12pt}} % dodatkowe odstępy przed tabelami i rysunkami
+\AtBeginEnvironment{table}{\small}\AtEndEnvironment{table}{\normalsize\vspace{12pt}}%
+\AtBeginEnvironment{tabular}{\fontsize{10}{9}\selectfont}%
+\AtBeginDocument{\counterwithin{lstlisting}{section}\counterwithin{figure}{section}\counterwithin{table}{section}\counterwithin{equation}{section}}
+
+\DeclareCaptionLabelFormat{cfscr}{#1 #2}
+\DeclareCaptionFont{ftscr}{\fontsize{9}{11pt}\selectfont}
+\DeclareCaptionLabelSeparator{labscr}{. }
+\captionsetup[table]{labelformat=cfscr,labelfont=ftscr,labelseparator=labscr,textfont=ftscr,position=top,skip=3pt}
+\captionsetup[figure]{labelformat=cfscr,labelfont=ftscr,labelseparator=labscr,textfont=ftscr,position=bottom,skip=3pt}
+\captionsetup[lstlisting]{labelformat=cfscr,labelfont=ftscr,labelseparator=labscr,textfont=ftscr,position=bottom,skip=3pt}
+
+%na potrzeby pionowego symbolu mikro 
+\usepackage{scalerel}
+\newsavebox{\fooboxMU}
+\newcommand{\slantbox}[2][0]{\colorlet{slantcolor}{.}\mbox{%
+        \sbox{\fooboxMU}{\color{slantcolor}#2}%
+        \hskip\wd\fooboxMU%
+        \pdfsave%
+        \pdfsetmatrix{1 0 #1 1}%
+        \llap{\usebox{\fooboxMU}}%
+        \pdfrestore%
+}}
+\newcommand\unslant[2][-.2]{%
+  \mkern1mu%
+  \ThisStyle{\slantbox[#1]{$\SavedStyle#2$}}%
+  \mkern-1mu%
+}
+
+% % % 10-cio linijkowy abstract
+\usepackage{fancybox,environ}
+
+\NewEnviron{fixedSizeBox}
+  {\def\trysize{12pt}\def\tryblskip{12.5pt}%
+   \retry}
+\makeatletter
+\def\retry{%
+  \ifdim\trysize<5.5pt
+    \WARNING\expandafter\@gobble
+  \else
+    \expandafter\@firstofone
+  \fi
+  {\edef\trysize{\the\dimexpr\trysize-0.5pt\relax}%
+   \edef\tryblskip{\the\dimexpr\tryblskip-0.5pt\relax}%
+   \sbox0{\begin{minipage}{.965\textwidth}
+   \setlength{\parindent}{1em}\noindent
+   \begingroup\edef\x{\endgroup
+     \noexpand\fontsize{\trysize}{\tryblskip}\noexpand\selectfont}\x
+   \BODY\end{minipage}}%
+  }%
+  \dimen0=\dimexpr\ht0+\dp0\relax
+  \ifdim\dimen0>.3\textwidth
+    \expandafter\retry
+  \else
+    \expandafter\outputoval
+  \fi}
+\makeatletter
+
+\def\WARNING{\sbox{0}{WARNING}}
+
+\def\outputoval{\mbox{\begin{minipage}[l][.27\textwidth]{1\textwidth}  
+\usebox{0}\end{minipage}}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newenvironment{example}{ 
+\textbf{\textcolor{mygray}{Przykład:}}\hspace{0.85cm}
+\ %\quad
+}{%
+
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand\author[1]{\renewcommand\@author{#1}}
+\renewcommand\@author{\@latex@error{No \noexpand\author given}\@ehc}
+
+\newcommand\supervisor[1]{\renewcommand\@supervisor{#1}}
+\newcommand\@supervisor{\@latex@error{No \noexpand\supervisor given}\@ehc}
+
+\newcommand\studentID[1]{\renewcommand\@studentID{#1}}
+\newcommand\@studentID{\@latex@error{No \noexpand\studentID given}\@ehc}
+
+
+\usepackage[all]{nowidow}
+
+\newcommand{\kod}[1]{\texttt{#1}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% strona tytułowa pracy
+\renewcommand{\maketitle}{
+\begin{titlepage}
+\begin{center}
+\vspace*{0.5cm}
+\includegraphics[width=12.5cm]{auxiliary/logoweii.jpg}
+\vfill
+{\textbf{\LARGE \@title}\par}
+\vfill
+{\textbf{\Large \@author {} -- \@studentID}\par}
+\end{center}
+\vspace{1.5cm}
+\begin{flushleft}
+{\Large Prowadzący:\par}
+
+{\Large \@supervisor}
+\end{flushleft}
+\vfill
+\begin{center}
+{\Large Rzeszów, \today}
+\end{center}
+\end{titlepage}
+}
+
+
+\let\oldsection\section
+\renewcommand{\section}{\clearpage\oldsection}
+\newcommand{\microS}{$\unslant\mu$}
+\endinput
