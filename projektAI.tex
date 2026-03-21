@@ -2,16 +2,16 @@
 \usepackage{weiiszablonzmodyfikowany}
 
 % Imię i nazwisko autora projektu
-\author{Imię Nazwisko}
+\author{Hubert Lech}
 
 % Numer indeksu autora (np. 123456)
-\studentID{XXXXXX}
+\studentID{177827 2EF-DI P09}
 
 % Tytuł pracy (należy podać pełny tytul pracy)
-\title{Temat pracy}
+\title{Sztuczna Inteligencja\\Projekt\\[0.4em]\large  Klasyfikacja głosowań kongresowych\\ z wykorzystaniem sieci neuronowej uczonej algorytmem wstecznej propagacji błędu z przyśpieszeniem metodą momentum (MLP\_M)}
 
 % Prowadzący
-\supervisor{mgr inż. Dawid Kalandyk}
+\supervisor{dr hab. inż. prof. PRz Roman Zajdel}
 
 \begin{document}
 
@@ -26,43 +26,497 @@
 \clearpage
 \blankpage
 
-\section{Wstęp}
+\section{Cel projektu}
 
-Tutaj powinno znaleźć się krótkie wprowadzenie do treści projektu.
-
+Celem projektu jest realizacja sieci neuronowej do klasyfikacji głosowań kongresowych. Głównym wyzwaniem badawczym jest przewidzenie przynależności partyjnej kongresmena (demokrata czy republikanin) na podstawie jego głosowań w 16 kluczowych kwestiach w 1984 roku. Dodatkowym zadaniem jest zbadanie wpływu różnych parametrów sieci na skuteczność klasyfikacji. Projekt ma na celu nie tylko osiągnięcie wysokiej dokładności klasyfikacji, ale także zrozumienie, które cechy głosowań są najbardziej istotne dla rozróżnienia między partiami politycznymi. Sieć zrealizowana została w języku Python.
 
 \section{Dane}
+\subsection{Zestaw danych}
 
-Tu powinien znaleźć się opis:
-\begin{enumerate}[label=\alph*), leftmargin=1.25cm]
-	\item bazy danych rozważanej w projekcie,
-	\item analiza statystyczna danych,
-	\item opis sposobu przygotowania danych do procesu nauki.
-\end{enumerate}
+Zestaw danych użyty w projekcie (Congressional Voting Records) pochodzi z UCI Machine Learning Repository i zawiera informacje o głosowaniach kongresmenów w 1984 roku \cite{uciVoting}. Każdy rekord reprezentuje jednego kongresmena i zawiera 16 atrybutów odpowiadających jego głosowaniom w kluczowych kwestiach, a także etykietę klasy (demokrata lub republikanin). Wartości atrybutów są kodowane symbolicznie: \texttt{y} (yea) oznacza tak, \texttt{n} (nay) oznacza nie oraz \texttt{?}. W tym zbiorze \texttt{?} nie oznacza klasycznego braku danych, lecz głos inny niż \texttt{y}/\texttt{n} (np. \emph{present} lub brak jednoznacznie zadeklarowanego stanowiska).
 
-Warto przedstawić wygląd danych przed oraz po kolejnych krokach obróbki.
+Zestaw zawiera 435 rekordów, z czego 45,2\% należy do klasy demokratów, a 54,8\% do republikanów. Każdy rekord składa się z 17 atrybutów: 16 atrybutów głosowań oraz 1 atrybut klasy. Zestaw danych jest stosunkowo mały, co może stanowić wyzwanie dla skutecznego trenowania modelu, zwłaszcza w kontekście unikania przeuczenia.
+
+Opis poszczególnych atrybutów głosowań jest następujący:
+\begin{itemize}[label={\textbullet}]
+\item \texttt{handicapped-infants} -- ustawa dotycząca ochrony i leczenia noworodków z niepełnosprawnościami (tak/nie)
+\item \texttt{water-project-cost-sharing} -- podział kosztów projektów wodnych między budżet federalny a lokalny (tak/nie)
+\item \texttt{adoption-of-the-budget-resolution} -- głosowanie nad ogólnym planem budżetowym państwa na dany rok (tak/nie)
+\item \texttt{physician-fee-freeze} -- zamrożenie stawek opłat pobieranych przez lekarzy w ramach programu Medicare (tak/nie)
+\item \texttt{el-salvador-aid} -- przyznanie pomocy finansowej i wojskowej dla rządu Salwadoru podczas wojny domowej (tak/nie)
+\item \texttt{religious-groups-in-schools} -- możliwość organizowania spotkań grup religijnych w publicznych szkołach średnich (tak/nie)
+\item \texttt{anti-satellite-test-ban} -- zakaz testowania broni antysatelitarnej przez USA (tak/nie)
+\item \texttt{aid-to-nicaraguan-contras} -- wsparcie finansowe dla rebeliantów walczących z rządem w Nikaragui (tak/nie)
+\item \texttt{mx-missile} -- finansowanie produkcji i rozmieszczenia międzykontynentalnych pocisków (tak/nie)
+\item \texttt{immigration} -- reforma prawa imigracyjnego (tak/nie)
+\item \texttt{synfuels-corporation-cutback} -- ograniczenie funduszy dla korporacji zajmującej się paliwami syntetycznymi (tak/nie)
+\item \texttt{education-spending} -- zwiększenie federalnych nakładów finansowych na edukację publiczną (tak/nie)
+\item \texttt{superfund-right-to-sue} -- kwestie dotyczące funduszu Superfund (oczyszczanie toksycznych odpadów) i prawa obywateli do pozywania zanieczyszczających (tak/nie)
+\item \texttt{crime} -- rozwiązania wynikające z kompleksowej ustawy o zwalczaniu przestępczości (tak/nie)
+\item \texttt{duty-free-exports} -- przepisy dotyczące eksportu bezcłowego i preferencji handlowych (tak/nie)
+\item \texttt{export-administration-act-south-africa} -- ograniczenia handlowe i sankcje wobec RPA w odpowiedzi na politykę apartheidu (tak/nie)
+\end{itemize}
+
+\subsection{Brakujące dane}
+W zbiorze dane oznaczone symbolem \texttt{?} występują w 248 rekordach, co stanowi 57\% wszystkich rekordów. Jest to znacząca ilość, która nie może zostać zignorowana i usunięta. W analizie przyjęto, że takie przypadki mogą wynikać z braku jednoznacznego stanowiska, dlatego w etapie przygotowania danych kodowane są jako neutralne 0. Pozostałe wartości \texttt{y} i \texttt{n} kodowane są odpowiednio jako 1 i -1. Taki sposób kodowania pozwala na zachowanie informacji o braku jednoznacznego stanowiska, jednocześnie umożliwiając modelowi uczenie się na podstawie tych danych.
+
+Przykładowe rekordy ze zbioru wejściowego (wraz z wystąpieniami znaku \texttt{?}) przedstawiono na listingu \ref{lst:house_votes_missing}.
+
+% \lstinputlisting[
+% inputencoding=utf8/cp1250,
+% firstline=1,
+% lastline=12,
+% breaklines=true,
+% numbers=left,
+% frame=single,
+% float,
+% caption={Przykładowe rekordy z pliku \texttt{house-votes-84.data}},
+% label={lst:house_votes_missing}
+% ]{house-votes-84.data}
+\textit{[Listing \texttt{house-votes-84.data} tymczasowo wyłączony dla szybszej kompilacji.]}
+\label{lst:house_votes_missing}
+
+\subsection{Przygotowanie danych}
+W ramach przygotowania danych zastosowano stały schemat, w którym głosy na tak (y) zamieniono na wartość 1, głosy przeciwne (n) na -1, natomiast wszelkie braki, wstrzymania się lub nieobecności oznaczone jako ? zamieniono na neutralną wartość 0.
+
+Równocześnie przekształcono etykietę klasy, przypisując demokratom identyfikator 0, a republikanom 1. Cała operacja została zrealizowana przy użyciu biblioteki Pandas, co pozwoliło na szybkie przetworzenie rekordów do postaci czystego pliku CSV.
+
+Implementację transformacji danych przedstawiono na listingu \ref{lst:transformacja_py}.
+
+% \lstinputlisting[
+% language=Python,
+% inputencoding=utf8/cp1250,
+% firstline=1,
+% lastline=80,
+% breaklines=true,
+% numbers=left,
+% frame=single,
+% float,
+% caption={Skrypt przygotowania danych \texttt{transformacja.py}},
+% label={lst:transformacja_py}
+% ]{transformacja.py}
+\textit{[Listing \texttt{transformacja.py} tymczasowo wyłączony dla szybszej kompilacji.]}
+\label{lst:transformacja_py}
 
 
-\section{Teoria}
+Po wykonaniu transformacji, dane zostały zapisane do nowego pliku \texttt{transformed\_votes.csv}, który zawiera już zakodowane wartości głosowań oraz etykiety klas.
+Te dane są już gotowe do wykorzystania w procesie trenowania sieci neuronowej.
 
-Tutaj należy zamieścić wprowadzenie do tego rozdziału.
+Przykładowe rekordy po transformacji przedstawiono na listingu \ref{lst:transformed_votes_sample}.
 
-\subsection{Wybrany algorytm nr 1}
+% \lstinputlisting[
+% inputencoding=utf8/cp1250,
+% firstline=1,
+% lastline=12,
+% breaklines=true,
+% numbers=left,
+% frame=single,
+% float,
+% caption={Przykładowe rekordy z pliku \texttt{transformed\_votes.csv}},
+% label={lst:transformed_votes_sample}
+% ]{transformed_votes.csv}
+\textit{[Listing \texttt{transformed\_votes.csv} tymczasowo wyłączony dla szybszej kompilacji.]}
+\label{lst:transformed_votes_sample}
 
-Teoria dotycząca wybranego algoorytmu nr 1.
+\subsection{Wizualizacja danych}
+W celu lepszego zrozumienia rozkładu głosowań w zbiorze danych, przeprowadzono wizualizację procentowego udziału głosów wewnątrz każdej partii dla poszczególnych kwestii. Wykresy te pozwalają na szybkie zidentyfikowanie, które kwestie były bardziej kontrowersyjne i jak różniły się stanowiska demokratów i republikanów.
 
-\subsection{Wybrany algorytm nr 2}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/dzieci_z_niepełnosprawnością.png}}
+\caption{Rozkład głosów dla kwestii: dzieci z niepełnosprawnością}
+\label{fig:viz_handicapped_infants}
+\end{figure}
 
-Teoria dotycząca wybranego algoorytmu nr 2.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/koszty_projektów_wodnych.png}}
+\caption{Rozkład głosów dla kwestii: koszty projektów wodnych}
+\label{fig:viz_water_project_costs}
+\end{figure}
 
-\subsection{Wybrany algorytm nr 3}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/rezolucja_budżetowa.png}}
+\caption{Rozkład głosów dla kwestii: rezolucja budżetowa}
+\label{fig:viz_budget_resolution}
+\end{figure}
 
-Teoria dotycząca wybranego algoorytmu nr 3.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/zamrożenie_opłat_lekarzy.png}}
+\caption{Rozkład głosów dla kwestii: zamrożenie opłat lekarzy}
+\label{fig:viz_physician_fee_freeze}
+\end{figure}
 
-\subsection{Wybrany algorytm nr 4}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/pomoc_dla_salwadoru.png}}
+\caption{Rozkład głosów dla kwestii: pomoc dla Salwadoru}
+\label{fig:viz_el_salvador_aid}
+\end{figure}
 
-Teoria dotycząca wybranego algoorytmu nr 4.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/religia_w_szkołach.png}}
+\caption{Rozkład głosów dla kwestii: religia w szkołach}
+\label{fig:viz_religion_in_schools}
+\end{figure}
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/testy_antysatelitarne.png}}
+\caption{Rozkład głosów dla kwestii: testy antysatelitarne}
+\label{fig:viz_antisatellite_tests}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/pomoc_dla_contras.png}}
+\caption{Rozkład głosów dla kwestii: pomoc dla Contras}
+\label{fig:viz_contras_aid}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/pociski_mx.png}}
+\caption{Rozkład głosów dla kwestii: pociski MX}
+\label{fig:viz_mx_missile}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/imigracja.png}}
+\caption{Rozkład głosów dla kwestii: imigracja}
+\label{fig:viz_immigration}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/paliwa_syntetyczne.png}}
+\caption{Rozkład głosów dla kwestii: paliwa syntetyczne}
+\label{fig:viz_synfuels}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/wydatki_na_edukację.png}}
+\caption{Rozkład głosów dla kwestii: wydatki na edukację}
+\label{fig:viz_education_spending}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/prawo_do_pozwów_(superfund).png}}
+\caption{Rozkład głosów dla kwestii: prawo do pozwów (Superfund)}
+\label{fig:viz_superfund_right_to_sue}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/przestępczość.png}}
+\caption{Rozkład głosów dla kwestii: przestępczość}
+\label{fig:viz_crime}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/eksport_bezcłowy.png}}
+\caption{Rozkład głosów dla kwestii: eksport bezcłowy}
+\label{fig:viz_duty_free_exports}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{\detokenize{wykresy/eksport_do_rpa.png}}
+\caption{Rozkład głosów dla kwestii: eksport do RPA}
+\label{fig:viz_export_south_africa}
+\end{figure}
+
+
+\section{Część teoretyczna}
+
+\subsection{Model neuronu}
+
+Początki formalnego opisu neuronu w kontekście obliczeń wiążą się z pracą Warrena S. McCullocha i Waltera Pittsa z 1943 roku. McCulloch był neurofizjologiem, natomiast Pitts matematykiem, co przełożyło się na próbę połączenia wiedzy o biologicznym neuronie z precyzyjnym zapisem matematycznym \cite{geronML}. W najprostszym ujęciu sztuczny neuron można traktować jako element przetwarzający sygnały wejściowe, który waży je, sumuje i na tej podstawie wytwarza sygnał wyjściowy.
+
+Na rysunku \ref{fig:model_perceptron_rosenblatt} przedstawiono schemat neuronu (perceptronu) z wejściami $x_1,\dots,x_L$ oraz odpowiadającymi im wagami $w_1,\dots,w_L$. Wagi opisują wpływ danego sygnału wejściowego na wynik neuronu: dodatnie wzmacniają wkład wejścia, a ujemne go osłabiają. Dodatkowo uwzględnia się wyraz wolny (bias) $b$, który pozwala przesunąć punkt równowagi sumy ważonej. Sygnał wyjściowy neuronu uzyskuje się, stosując funkcję aktywacji do pobudzenia.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/perceptron.png}
+\caption{Schemat sztucznego neuronu (perceptronu) z wagami i wyjściem \cite{zajdelLab}}
+\label{fig:model_perceptron_rosenblatt}
+\end{figure}
+
+\subsection{Opis matematyczny sztucznego neuronu}
+
+Pobudzenie neuronu (suma ważona z uwzględnieniem wyrazu wolnego) można zapisać jako:
+\begin{equation}
+z = \sum_{j=1}^{L} w_j x_j + b.
+\end{equation}
+
+\subsubsection*{Znaczenie symboli}
+\begin{itemize}[label={\textbullet}]
+\item $x_j$ -- $j$-ty sygnał wejściowy (atrybut)
+\item $w_j$ -- waga odpowiadająca sygnałowi $x_j$
+\item $b$ -- wyraz wolny (bias), przesunięcie
+\item $z$ -- pobudzenie neuronu (suma ważona z biasem)
+\item $L$ -- liczba sygnałów wejściowych
+\end{itemize}
+\subsection{Funkcja aktywacji}
+
+W warstwach ukrytych zastosowano funkcję tangens hiperboliczny ($\tanh$):
+\begin{equation}
+h = \tanh(z).
+\end{equation}
+
+Dane wejściowe mają wartości z przedziału $\{-1,0,1\}$, czyli są centrowane wokół zera i nie wymagają dodatkowej normalizacji. To dobrze współgra z funkcją $\tanh$, która zwraca wartości z zakresu $(-1,1)$ i dobrze pracuje dla sygnałów symetrycznych względem zera.
+
+W warstwie wyjściowej zastosowano funkcję sigmoidalną:
+\begin{equation}
+\hat{y} = \sigma(z) = \frac{1}{1 + e^{-z}}.
+\end{equation}
+
+Taki wybór jest naturalny dla zadania binarnego, ponieważ etykiety klas mają postać $0$ i $1$. Wyjście sigmoidy można bezpośrednio interpretować jako prawdopodobieństwo klasy $1$; przykładowo wynik $0{,}85$ oznacza 85\% prawdopodobieństwa przynależności do klasy $1$.
+
+Podsumowanie struktury modelu:
+\begin{itemize}[label={\textbullet}]
+\item Wejście: $\mathbf{X}=[x_1,x_2,\dots,x_{16}]$, gdzie $x_i \in \{-1,0,1\}$
+\item Warstwy ukryte: aktywacja $\tanh$
+\item Warstwa wyjściowa: aktywacja sigmoid (dla klas $0/1$)
+\end{itemize}
+
+
+\subsection{Sieci jednokierunkowe jednowarstwowe}
+
+Sieć jednowarstwowa (bez warstw ukrytych) składa się z warstwy wejściowej i jednej warstwy obliczeniowej. Dla $L$ sygnałów wejściowych oraz $K$ neuronów wyjściowych można zapisać:
+\begin{equation}
+z_i = \sum_{j=1}^{L} w_{ij}x_j + b_i, \qquad i=1,\dots,K,
+\end{equation}
+\begin{equation}
+y_i = f_i(z_i).
+\end{equation}
+
+W zapisie macierzowym:
+\begin{equation}
+\mathbf{z} = \mathbf{W}\mathbf{x} + \mathbf{b},
+\end{equation}
+\begin{equation}
+\mathbf{y} = f(\mathbf{z}) = f(\mathbf{W}\mathbf{x}+\mathbf{b}).
+\end{equation}
+
+Dla uczenia nadzorowanego (próbka ucząca $n$, wektor docelowy $\mathbf{d}^{(n)}$) funkcję celu SSE można zapisać jako:
+\begin{equation}
+E = \frac{1}{2}\sum_{n=1}^{N}\sum_{i=1}^{K}\left(y_i^{(n)}-d_i^{(n)}\right)^2.
+\end{equation}
+
+Gradient względem wag i przesunięć ma postać:
+\begin{equation}
+\frac{\partial E}{\partial w_{ij}} = \sum_{n=1}^{N} \delta_i^{(n)} x_j^{(n)},
+\qquad
+\frac{\partial E}{\partial b_i} = \sum_{n=1}^{N} \delta_i^{(n)},
+\end{equation}
+gdzie
+\begin{equation}
+\delta_i^{(n)} = \left(y_i^{(n)}-d_i^{(n)}\right) f_i'\!\left(z_i^{(n)}\right).
+\end{equation}
+
+Aktualizacja parametrów metodą największego spadku:
+\begin{equation}
+w_{ij}^{(k+1)} = w_{ij}^{(k)} - \eta\frac{\partial E}{\partial w_{ij}},
+\qquad
+b_i^{(k+1)} = b_i^{(k)} - \eta\frac{\partial E}{\partial b_i},
+\end{equation}
+gdzie $\eta>0$ oznacza współczynnik uczenia \cite{zajdelLab}.
+
+
+
+\subsection{Sieci neuronowe jednokierunkowe wielowarstwowe}
+
+W sieci jednokierunkowej wielowarstwowej każda warstwa ma własną macierz wag $\mathbf{W}^{(l)}$, wektor przesunięć $\mathbf{b}^{(l)}$, funkcję aktywacji $f^{(l)}(\cdot)$ oraz wektor wyjściowy $\mathbf{y}^{(l)}$. Dla trzech warstw obliczeniowych (1, 2, 3) otrzymujemy propagację sygnału od wejścia do wyjścia \cite{zajdelLab9}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/wielowarstwowa.png}
+\caption{Schemat jednokierunkowej sieci wielowarstwowej \cite{zajdelLab9}}
+\label{fig:mlp_arch}
+\end{figure}
+
+Dla wejścia $\mathbf{x}$ i kolejnych warstw otrzymujemy:
+\begin{equation}
+\mathbf{y}^{(1)} = f^{(1)}\!\left(\mathbf{W}^{(1)}\mathbf{x} + \mathbf{b}^{(1)}\right),
+\end{equation}
+\begin{equation}
+\mathbf{y}^{(2)} = f^{(2)}\!\left(\mathbf{W}^{(2)}\mathbf{y}^{(1)} + \mathbf{b}^{(2)}\right),
+\end{equation}
+\begin{equation}
+\mathbf{y}^{(3)} = f^{(3)}\!\left(\mathbf{W}^{(3)}\mathbf{y}^{(2)} + \mathbf{b}^{(3)}\right).
+\end{equation}
+
+Całą sieć można zapisać jako złożenie przekształceń:
+\begin{equation}
+\mathbf{y}^{(3)} = f^{(3)}\!\left(\mathbf{W}^{(3)} f^{(2)}\!\left(\mathbf{W}^{(2)} f^{(1)}\!\left(\mathbf{W}^{(1)}\mathbf{x}+\mathbf{b}^{(1)}\right)+\mathbf{b}^{(2)}\right)+\mathbf{b}^{(3)}\right).
+\end{equation}
+
+W notacji indeksowej (zgodnej z opisem laboratoryjnym) dla neuronu $i_l$ warstwy $l$:
+\begin{equation}
+z_{i_l}^{(l)} = \sum_{i_{l-1}=1}^{K_{l-1}} w_{i_l i_{l-1}}^{(l)} y_{i_{l-1}}^{(l-1)} + b_{i_l}^{(l)},
+\qquad
+y_{i_l}^{(l)} = f^{(l)}\!\left(z_{i_l}^{(l)}\right),
+\end{equation}
+przy czym $\mathbf{y}^{(0)}=\mathbf{x}$ oraz dla pierwszej warstwy $K_0=L$.
+
+\subsection{Algorytm wstecznej propagacji błędu}
+
+Dla wyjścia trzeciej warstwy i sygnału zadanego $\mathbf{d}$ funkcję błędu SSE zapisujemy jako:
+\begin{equation}
+E = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(y^{(3)}_{i_3}-d_{i_3}\right)^2.
+\end{equation}
+
+Po podstawieniu kolejnych warstw (łańcuchowo) otrzymuje się rozwiniętą zależność:
+\begin{equation}
+E = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(
+f^{(3)}\!\left(\sum_{i_2=1}^{K_2} w_{i_3 i_2}^{(3)}
+f^{(2)}\!\left(\sum_{i_1=1}^{K_1} w_{i_2 i_1}^{(2)}
+f^{(1)}\!\left(\sum_{j=1}^{L} w_{i_1 j}^{(1)}x_j + b_{i_1}^{(1)}\right)
++ b_{i_2}^{(2)}\right)
++ b_{i_3}^{(3)}\right)
+- d_{i_3}
+\right)^2.
+\end{equation}
+
+W warstwie wyjściowej składnik gradientu względem wagi wyznacza się z reguły łańcuchowej:
+\begin{equation}
+\frac{\partial E}{\partial w^{(3)}_{i_3 i_2}}
+= \frac{\partial E}{\partial y^{(3)}_{i_3}}
+\frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}
+\frac{\partial z^{(3)}_{i_3}}{\partial w^{(3)}_{i_3 i_2}}
+= \left(y^{(3)}_{i_3}-d_{i_3}\right)
+f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
+y^{(2)}_{i_2}.
+\end{equation}
+
+Dla warstwy drugiej (ukrytej) dostajemy:
+\begin{equation}
+\begin{aligned}
+\frac{\partial E}{\partial w^{(2)}_{i_2 i_1}}
+&= \sum_{i_3=1}^{K_3}
+\frac{\partial E}{\partial y^{(3)}_{i_3}}
+\frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}
+\frac{\partial z^{(3)}_{i_3}}{\partial y^{(2)}_{i_2}}
+\frac{\partial y^{(2)}_{i_2}}{\partial z^{(2)}_{i_2}}
+\frac{\partial z^{(2)}_{i_2}}{\partial w^{(2)}_{i_2 i_1}} \\
+&= \sum_{i_3=1}^{K_3}
+\left(y^{(3)}_{i_3}-d_{i_3}\right)
+f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
+w^{(3)}_{i_3 i_2}
+f'^{(2)}\!\left(z^{(2)}_{i_2}\right)
+y^{(1)}_{i_1}.
+\end{aligned}
+\end{equation}
+
+Dla pierwszej warstwy analogicznie:
+\begin{equation}
+\begin{aligned}
+\frac{\partial E}{\partial w^{(1)}_{i_1 j}}
+&= \sum_{i_3=1}^{K_3}
+\frac{\partial E}{\partial y^{(3)}_{i_3}}
+\frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}
+\sum_{i_2=1}^{K_2}
+\frac{\partial z^{(3)}_{i_3}}{\partial y^{(2)}_{i_2}}
+\frac{\partial y^{(2)}_{i_2}}{\partial z^{(2)}_{i_2}}
+\frac{\partial z^{(2)}_{i_2}}{\partial y^{(1)}_{i_1}}
+\frac{\partial y^{(1)}_{i_1}}{\partial z^{(1)}_{i_1}}
+\frac{\partial z^{(1)}_{i_1}}{\partial w^{(1)}_{i_1 j}} \\
+&= \sum_{i_3=1}^{K_3}
+\left(y^{(3)}_{i_3}-d_{i_3}\right)
+f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
+\sum_{i_2=1}^{K_2}
+w^{(3)}_{i_3 i_2}
+f'^{(2)}\!\left(z^{(2)}_{i_2}\right)
+w^{(2)}_{i_2 i_1}
+f'^{(1)}\!\left(z^{(1)}_{i_1}\right)
+x_j.
+\end{aligned}
+\end{equation}
+
+Po wprowadzeniu oznaczen sygnalow bledu:
+\begin{equation}
+\delta^{(3)}_{i_3} = \left(y^{(3)}_{i_3}-d_{i_3}\right)f'^{(3)}\!\left(z^{(3)}_{i_3}\right),
+\end{equation}
+\begin{equation}
+\delta^{(2)}_{i_2} = \left(\sum_{i_3=1}^{K_3} w^{(3)}_{i_3 i_2}\,\delta^{(3)}_{i_3}\right)f'^{(2)}\!\left(z^{(2)}_{i_2}\right),
+\end{equation}
+\begin{equation}
+\delta^{(1)}_{i_1} = \left(\sum_{i_2=1}^{K_2} w^{(2)}_{i_2 i_1}\,\delta^{(2)}_{i_2}\right)f'^{(1)}\!\left(z^{(1)}_{i_1}\right),
+\end{equation}
+otrzymuje sie rownowazne postacie skrocone:
+\begin{equation}
+\frac{\partial E}{\partial w^{(3)}_{i_3 i_2}} = \delta^{(3)}_{i_3}y^{(2)}_{i_2},
+\qquad
+\frac{\partial E}{\partial w^{(2)}_{i_2 i_1}} = \delta^{(2)}_{i_2}y^{(1)}_{i_1},
+\qquad
+\frac{\partial E}{\partial w^{(1)}_{i_1 j}} = \delta^{(1)}_{i_1}x_j.
+\end{equation}
+
+Gradienty wzgledem przesuniec wynikaja bezposrednio z reguly lancuchowej:
+\begin{equation}
+\frac{\partial E}{\partial b^{(3)}_{i_3}} = \frac{\partial E}{\partial y^{(3)}_{i_3}}\frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}\frac{\partial z^{(3)}_{i_3}}{\partial b^{(3)}_{i_3}} = \delta^{(3)}_{i_3},
+\end{equation}
+\begin{equation}
+\frac{\partial E}{\partial b^{(2)}_{i_2}} = \delta^{(2)}_{i_2},
+\qquad
+\frac{\partial E}{\partial b^{(1)}_{i_1}} = \delta^{(1)}_{i_1}.
+\end{equation}
+
+Powyższe zależności odpowiadają klasycznemu algorytmowi backpropagation dla sieci wielowarstwowej \cite{zajdelLab9}.
+\subsection{Metoda momentum}
+
+W uczeniu pod nadzorem modyfikacja gradientowej reguły uczenia z członem momentum może zostać zapisana jako:
+\begin{equation}
+w_{ij}(t+1)=w_{ij}(t)+\Delta w_{ij}(t)+m_c M_{ij}(t),
+\end{equation}
+gdzie:
+\begin{equation}
+\Delta w_{ij}(t)=-\eta\frac{\partial E}{\partial w_{ij}}(t),
+\qquad
+M_{ij}(t)=w_{ij}(t)-w_{ij}(t-1).
+\end{equation}
+
+Wspolczynnik $m_c\in[0,1]$ jest wspolczynnikiem momentum. Dla $m_c=0$ otrzymujemy klasyczna regule gradientowa bez przyspieszenia.
+
+Analogiczna aktualizacja dla przesuniec:
+\begin{equation}
+b_i(t+1)=b_i(t)+\Delta b_i(t)+m_c M_{b_i}(t),
+\end{equation}
+\begin{equation}
+\Delta b_i(t)=-\eta\frac{\partial E}{\partial b_i}(t),
+\qquad
+M_{b_i}(t)=b_i(t)-b_i(t-1).
+\end{equation}
+
+W zapisie warstwowym (dla warstwy $l$):
+\begin{equation}
+\mathbf{W}^{(l)}(t+1)=\mathbf{W}^{(l)}(t)+\Delta\mathbf{W}^{(l)}(t)+m_c\mathbf{M}_{W}^{(l)}(t),
+\end{equation}
+\begin{equation}
+\Delta\mathbf{W}^{(l)}(t)=-\eta\frac{\partial E}{\partial \mathbf{W}^{(l)}}(t),
+\qquad
+\mathbf{M}_{W}^{(l)}(t)=\mathbf{W}^{(l)}(t)-\mathbf{W}^{(l)}(t-1),
+\end{equation}
+\begin{equation}
+\mathbf{b}^{(l)}(t+1)=\mathbf{b}^{(l)}(t)+\Delta\mathbf{b}^{(l)}(t)+m_c\mathbf{M}_{b}^{(l)}(t),
+\end{equation}
+\begin{equation}
+\Delta\mathbf{b}^{(l)}(t)=-\eta\frac{\partial E}{\partial \mathbf{b}^{(l)}}(t),
+\qquad
+\mathbf{M}_{b}^{(l)}(t)=\mathbf{b}^{(l)}(t)-\mathbf{b}^{(l)}(t-1).
+\end{equation}
+
+W praktyce czesto przyjmuje sie $m_c\approx 0{,}9$--$0{,}95$, co zwykle zwieksza szybkosc uczenia i ogranicza oscylacje w trakcie minimalizacji funkcji celu \cite{zajdelLab}.
+
+\section{Implementacja sieci neuronowej}
 
 \section{Eksperymenty}
 
@@ -106,367 +560,6 @@ Tutaj należy zamieścić wprowadzenie do tego eksperyemntu.
 Tutaj należy zamieścić podsumowanie przeprowadzonych eksperyemntów.
 
 
-\section{Pomoc - należy usunąć przed oddaniem pracy.}
-
-Opisując własne dokonania, stosuje się formę bezosobową w czasie przeszłym np. 
-celem pracy było zaprojektowanie\ldots, zakres pracy obejmował 
-wyznaczenie\ldots, w~ramach pracy wykonano model\ldots itp.
-
-Przy stosowaniu podziału na rozdziały i podrozdziały 
-zaleca się unikać podziału więcej niż trzystopniowego. 
-Podział tekstu, szczególnie na rozdziały główne, wynikać 
-powinien z zakresu i charakterystyki realizowanej pracy.
-
-Należy pamiętać, że na końcu tytułu rozdziału, 
-podrozdziału i zakresu nie umieszcza się kropki.
-Podobnie pierwszy wiersz po tytule rozdziału, 
-podrozdziału czy zakresu nie ma wcięcia poziomego, 
-ponieważ już został dodany odstęp pionowy.
-
-Na końcu każdego akapitu, którego tekst zaczerpnięto z literatury, 
-musi znajdować się odnośnik do właściwej pozycji w wykazie literatury. 
-W pracy nie stosuje się odnośników w formie przypisów.
-Liczby w nawiasie kwadratowym oznaczają kolejny numer pozycji w wykazie, 
-np. [1] lub [1, 4, 7] lub [1, 6-8] itp.
-Efekt ten można uzyskać stosując polecenie 
-\kod{\symbol{92}cite} z~parametrem odwołującym się do pozycji 
-bibliografii oraz stylem bibliografii ustawionym na \kod{plain}.
-
-Cytaty (dosłowne przytoczenie obcego tekstu w pracy) pisze się czcionką pochyłą 
-(kursywą) albo ujmuje w cudzysłów (nigdy oba naraz). 
-Przykład: \emph{Współpracując z jednostkami gospodarczymi działającymi w kraju, 
-kształci wysokokwalifikowaną kadrę inżynierów}, albo 
-,,Współpracując z jednostkami gospodarczymi działającymi w kraju, 
-kształci wysokokwalifikowaną kadrę inżynierów''.
-
-Fragmenty kodów programów pisze się czcionką o stałej szerokości, styl \footnotesize {\texttt{Courier}}
-\normalsize{(Courier New, Liberation Mono itp.) o rozmiarze 10 punktów.}
-
-
-\subsection{Zalecenia co do sposobu pisania jednostek i symboli wielkości fizycznych}
-
-Poniższy podrozdział opracowano na podstawie \cite{Pawluk2001}. 
-W trakcie pisania pracy należy zwracać uwagę na sposób oznaczania 
-jednostek i symboli wielkości fizycznych. Przy zapisywaniu jednostek 
-i symboli wielkości fizycznych można wyróżnić zapis w~postaci kursywy 
-(pismo pochyłe) oraz antykwy\footnote{Potoczna nazwa pisma prostego.} (pismo proste). 
-
-\begin{enumerate}[label=\arabic*), leftmargin=1.25cm]
-
-\item Kursywę należy stosować w następujących przypadkach:
-
-	\begin{itemize}[label={--},labelsep=0.4cm,leftmargin=0.6cm] %[leftmargin=0.65cm]
-	\item symboli wielkości fizycznych niezależnie od tego czy jest to 
-		litera alfabetu greckiego (np. przenikalność magnetyczna $\mu$) 
-		czy też łacińskiego (np. rezystancja $R$). Należy przestrzegać tej 
-		zasady niezależnie od miejsca, w którym pojawia się symbol tj. tekst,
-		wzory matematyczne, rysunki, tabele,
-
-	\item ogólny symbol zapisu funkcji czyli np. $f$, a nie f. 
-		Nie dotyczy to jednak zapisu konkretnych funkcji np. $\cos \omega t$ a nie $cos \omega t$,
-
-	\item macierze, wektory, których elementami są wielkości 
-		fizyczne należy zapisywać dodatkowo czcionką półgrubą (bold) np. 
-		$\bm{R} = \left[ 
-		\begin{array}{cc}
-		R_{11} & R_{12} \\
-		R_{21} & R_{22} 
-		\end{array} 
-		\right]$,
-		$\bm{U} = \left[ 
-		\begin{array}{c}
-		U_{1} \\
-		U_{2} 
-		\end{array} 
-		\right]$,
-
-	\item wskaźnik dolny, górny, prawo- i lewostronny, ale tylko gdy odnosi 
-		się do konkretnej wielkości fizycznej, czyli np. składowa $x$-owa 
-		indukcji magnetycznej $B_x$, a nie $B_{\mathrm{x}}$,
-
-	\item wskaźniki górne i dolne oznaczające dowolną liczbę 
-		np. $R_j$, $I^k$, ale nie $R_\mathit{1}$, $I^\mathit{2}$.
-
-	\end{itemize}
-
-\item Czcionkę prostą należy stosować w następujących sytuacjach:
-	\begin{itemize}[label={--},labelsep=0.4cm,leftmargin=0.6cm]
-		
-	\item wszystkie cyfry,
-
-	\item symbole konkretnych funkcji np. $\mathrm{tg\ } \omega t$, a nie $tg \omega t$,
-
-	\item operatory operacji matematycznych np. pochodne 
-		zwyczajne $\frac{\mathrm{d} x}{\mathrm{d} t}$, a nie $\frac{d x}{d t}$,
-
-	\item symbole liczb o konkretnej wartości np. przenikalność 
-		elektryczna próżni $\varepsilon_0 = 8,8542 \cdot 10^{-12}$ $\mathrm{F} \cdot \mathrm{m}^{-1}$, 
-		a nie $\varepsilon_0 = 8,8542 \cdot 10^{-12}$ $\mathrm{F} \cdot \mathrm{m}^{-1}$,
-
-	\item indeksy, jeżeli odnoszą się do: obiektów (fizycznych, geometrycznych), 
-		czyli, np. natężenie pola elektrycznego w punkcie A to $E_\mathrm{A}$, 
-		a nie $E_A$, zjawisk lub stanów fizycznych, np. moment obciążenia 
-		to $T_\mathrm{L}$, a nie $T_L$, do nazwisk czy też oznaczeń pierwiastków, 
-		np. straty w miedzi to $P_{\mathrm{Cu}}$ a nie $P_{Cu}$, do charakteru 
-		wielkości symbolizowanej przez literę źródłową, np. wartość maksymalna 
-		siły to $F_\mathrm{max}$, a nie $F_{max}$, oznaczeń jednostek miary 
-		np. $\mathrm{M}\Omega$, a nie $M \mathit{\Omega}$.
-
-	\end{itemize}
-
-\item W przypadku jednostek miar (które zawsze należy pisać krojem prostym) 
-	zapisując konkretną wartość liczbą należy podać jej wartość i jednostkę 
-	z zachowaniem następujących zasad:
-
-	\begin{itemize}[label={--},labelsep=0.4cm,leftmargin=0.6cm]
-
-	\item zapisując wartość liczbową wielkości fizycznej po spacji należy podać 
-		jej jednostkę, ale nie nazwę jednostki np. $10~\mathrm{A}$, 
-		ale nie $10$ amper czy też $10$ amperów,
-
-	\item zapisując wartość liczbową słownie należy w tej konwencji 
-		podać też jednostkę np. dziesięć omów, ale nie dziesięć $\Omega$
-
-	\item jednostek nie należy umieszczać w nawiasach kwadratowych, 
-		np. $I=1$ $\mathrm{[A]}$. Odstępstwem od tej zasady mogą być tabele, 
-		nagłówki kolumn, opisy osi na wykresach oraz w sporadycznych sytuacjach 
-		we wzorach matematycznych (ale tylko wówczas, gdy zależność matematyczna 
-		nie wskazuje w~jakiej jednostce wystąpi wartość liczbowa). Przykłady 
-		odstępstw zamieszczono w~podrozdziale \ref{Subsec:Rysunki-i-tabele}.   
-
-	\end{itemize}
-
-\item W trakcie zapisu symboli wielkości matematycznych można stosować również 
-	szereg znaków diakrytycznych, jak również należy przestrzegać następujących zaleceń:
-
-	\begin{itemize}[label={--},labelsep=0.4cm,leftmargin=0.6cm]
-	\item wartości chwilowe podstawowych wielkości fizycznych używanych np. 
-		w elektrotechnice należy zapisać małymi literami, np. $u$, $i$, 
-		lub stosować zapis np. $u(t)$, lub stosować indeks ,,$t$'' przy wielkości, np. $U_t$,
-
-	\item wartości skuteczne wielkości okresowych należy zapisać dużą literą np. $U$, $I$, 
-
-	\item wartości szczytowe funkcji zmiennej, amplitudę funkcji sinusoidalnej 
-		czasu należy zapisać jako np. $U_\mathrm{m}$,
-
-	\item podkreślenie symboli reprezentujących wielkości fizyczne, 
-		których wartość liczbowa jest liczbą zespoloną, przy czym podkreślenie 
-		dotyczy tylko literki źródłowej np. $\underline{Z}_1$, a nie $\underline{Z_1}$,
-
-	\item kreska nad literą źródłową oznacza wartość średnią, np. $\overline{I}$ co 
-		jest równoważne $I_\mathrm{av}$.
-
-	\end{itemize}
-
-\end{enumerate}
-
-\subsection{Rysunki i tabele}
-\label{Subsec:Rysunki-i-tabele}
-
-Tekst podstawowy w tabeli pisze się czcionką o rozmiarze 10 punktów, 
-pojedyncza interlinia. Dane liczbowe -- wyśrodkowane, dane 
-tekstowe -- wyrównane do lewej. Rysunki i tabele zamieszcza się 
-wyśrodkowane na stronie, bez wcięcia pierwszego wiersza.
-
-W akapicie poprzedzającym rysunek lub tabelę musi znajdować się 
-krótki opis, czego dotyczy dany rysunek/tabela (odniesienie do rysunku/tabeli). 
-Tytuły numeruje się zgodnie z kolejnością w danym rozdziale: 
-numer\_rozdziału.numer\_tabeli/rysunku (np. rys. 2.1, tabela 3.5). 
-W tytule rysunku/tabeli, zaczerpniętych z literatury, podaje się odnośnik 
-do właściwej pozycji. Należy zadbać o to, aby opisy na rysunkach były 
-czytelne (czcionka 8 punktów lub większa). Staraj się nie wymuszać numeracji, 
-pozwól aby robił to za ciebie \LaTeX. Stosuj \verb!\label! do znakowania obiektów, 
-do których być może w tekście się będziesz odwoływał 
-(rozdziały, rysunki, tabele, wzory, listingi \ldots). 
-Odwołuj się do nich w tekście  za pomocą funkcji \verb!\ref{NazwaObiektu}!. 
-Pamiętaj, że \LaTeX{}, korzystając z polecenia \verb|latex| nie odczytuje z 
-plików .jpg, .png ich wielkości. Polecenie \verb|latex| generuje plik \verb|DVI|. 
-Jeżeli chcesz go używać zgłosi stosowny błąd. Aby się go pozbyć zdefiniuj wielkość 
-natywną pliku grafiki. Polecamy jednak używanie zamiast polecenia \verb|latex|, 
-polecenie \verb|pdflatex|, wówczas problem nie wystąpi.\\
-
-\begin{example}
-[\ldots] co umożliwia wyznaczenie wartości napięcia. 
-Na rys. \ref{Fig:schemat} przedstawiono schemat obwodu z równolegle dołączoną pojemnością $C_p$.
-\end{example}
-
-\begin{figure}[ht]%
- \centering%
- \includegraphics[width=6cm]{figures/fig1.png}%
- \caption{Tytuł rysunku, rozmiar 11 pkt, pojedyncza interlinia, akapit wyśrodkowany, 
- bez wcięcia pierwszego wiersza. Na końcu tytułu rysunku/tabeli nie stawia się kropki [8]}%
- \label{Fig:schemat}%
-\end{figure}
-
-\begin{example}
-[\ldots] Na rysunku \ref{Fig:wykres} pokazano przykładową zależność prądów 
-pasmowych $i_\mathrm{ph}$ bezszczotkowego silnika prądu stałego z magnesami 
-trwałymi w funkcji położenia wirnika $\theta$.
-\end{example}
-
-\begin{figure}[ht]
-	\centering
-	\includegraphics[width=12cm]{figures/fig2.png}
-	\caption{Tytuł rysunku, rozmiar 11 pkt, pojedyncza interlinia, 
-	akapit wyśrodkowany, bez wcięcia pierwszego wiersza. Na końcu tytułu 
-	rysunku/tabeli nie stawia się kropki [8]}
-\label{Fig:wykres}
-\end{figure}
-
-
-\begin{example}
-[\ldots] oraz indukcyjności wzajemnej. W tabeli \ref{Tab:tabela} przedstawiono 
-podstawowe parametry obwodu nieliniowego, zasilanego napięciem trójfazowym.
-\end{example}
-
-\begin{table}[ht]
-\caption{Tytuł tabeli, rozmiar 11 pkt, pojedyncza interlinia, akapit wyrównany do lewej}
-\centering		
-	\begin{tabular}{|c|c|c|c|c|}	
-		\hline
-		$U$ [V] & $I$ [mA] & $R$, [k$\Omega$] & $L$ [mH] & $R/R_{20}$ \\
-		\hline
-		13,6 & 7,29 & 3,94 & 100 & 1,25 \\
-		\hline
-	\end{tabular}	
-	
-\label{Tab:tabela}
-\end{table}	
-
-\subsection{Wzory matematyczne}
-
-Zmienne we wzorach pisze się czcionką pochyłą (styl edytora równań ,,Matematyka'') 
-natomiast symbole, niebędące zmiennymi, czcionką prostą (styl ,,Tekst'').
-Rozmiary czcionek: normalny 12 punktów, indeks dolny/górny 9 pkt, indeks 
-podrzędny 7 pkt, symbol 24 pkt, podsymbol 12 pkt Separatorem dziesiętnym w liczbach jest
-przecinek, a nie kropka (dotyczy to również liczb pisanych w tekście akapitu). 
-Poddaj się w tym zakresie \LaTeX{}owi -- pisz wzór, a poprawnie się utworzy.
-
-
-Pod wzorem należy zamieścić objaśnienia użytych symboli (chyba, że 
-znajdują się w wykazie na początku pracy). Wzory umieszcza się wyśrodkowane i numeruje zgodnie
-z kolejnością w danym rozdziale: (numer\_rozdziału.numer\_wzoru). 
-Numery wzorów wyrównuje się do prawego marginesu. W akapicie poprzedzającym 
-wzór musi znajdować się krótki opis, czego dotyczy dany wzór i -- jeżeli 
-potrzeba -- odwołanie do literatury.
-
-\begin{example}
-[\ldots] wyznacza się, na podstawie wyrażenia (\ref{Eq:rownanie}). 
-W nawiasach podano rozmiary czcionek używanych we wzorach
-\end{example}
-
-\begin{equation}
-A(12)={\sum}(24)m_{s(9)}N^{k_{p(7)}}
-\label{Eq:rownanie}
-\end{equation}
-gdzie: \\$m_s$ -- masa próbki, \\$N$ -- natężenie oświetlenia, 
-\\$k_p$ -- wykładnik potęgi $(k_p=1,3-2,1)$.\\
-
-
-\subsection{Listingi programów}
-
-W pracy dyplomowej możesz umieszczać fragmenty programów. 
-Pamiętaj, aby umieszczać krótkie, tylko najważniejsze fragmenty 
-kodów źródłowych. Zawsze je komentuj w~treści
-pracy dyplomowej. Typowo w \LaTeX{} kody źródłowe umieszczane 
-są w środowisku verbatim (\verb|\begin{verbatim}...\end{verbatim}|). 
-Obecnie instnieje jednak bardziej nowoczesne i bardziej 
-funkcjonalne środowisko \verb|lstlisting| 
-(wymaga zainstalowanego w systemie pakietu \verb|listings|). 
-Zwróć uwagę, że możesz kolorować składnię
-automatycznie za pomocą parametru \verb|language|. 
-W niniejszym dokumencie przedstawiono trzy przykłady 
-listingów -- listing \ref{KodMatlab1} to przykład kodu 
-źródłowego Matlaba, poniżej listing \ref{KodPerl1} dla Perla i 
-dołączony z~zewnętrznego pliku listing języka C (\ref{lst:plchr}).\\
-%\komentarz{
-
-\begin{lstlisting}[language=Matlab,caption=Listing programu Matlab,label={KodMatlab1}]
-i = 1
-p = 3
-for i = 1:10
-    if i > 3
-        i=i+p
-    else 
-        i=i+1
-    end
-end
-\end{lstlisting}
-
-\begin{lstlisting}[language=Perl,caption=Listing programu Perl,label={KodPerl1}]
-  my $url ='http://pei.prz.edu.pl';
-  use LWP::Simple;
-  my $content = get $url;
-  die "Couldn't get $url" unless defined $content;
-  print $content;
-  print "\n";
-  print "Length " + length($content)
-\end{lstlisting}
-
-Z pewnością przeglądając źródło tego dokumentu zobaczysz, że kody 
-źródłowe powinny mieć zdefiniowane parametry \verb|label|, aby łatwo 
-w tekście do nich się odwoływać.
-Numeracja linii jest w stylu domyślnie włączona (to przydatne, 
-bo w treści pracy łatwo odwołać się dzięki temu do konkretnego 
-wiersza w kodzie źródłowym), możesz je wyłączyć podając jako 
-parametr \verb|numbers=none|. Więcej szczegółów możesz odnaleźć w 
-sekcji \verb|\lstset| pliku arkusza stylów. 
-%}
-
-Można również dołączać listingi z~zewnętrznych 
-plików\footnote{i nadać im taki sam (albo inny) wygląd jak ze środowiska \texttt{lstlisting}.}, 
-\textbf{zwłaszcza jeżeli zawierają polskie znaki diakrytyczne}. 
-Można w~tym celu wykorzystać polecenie \verb|lstinputlisting|, 
-które przekoduje znaki na te z~dostępnej czcionki:
-\begin{verbatim}
-\lstinputlisting[language={[ANSI]C},inputencoding=utf8/cp1250,
-firstline=2,lastline=6,breaklines=true,numbers=left,frame=hnone,
-caption={Polskie znaki diakrytyczne w kodzie},label={lst:plchr}]
-{auxiliary/start.c}
-\end{verbatim}
-\lstinputlisting[language={[ANSI]C},inputencoding=utf8/cp1250,firstline=2,lastline=6,breaklines=true,numbers=left,frame=hnone,caption={Polskie znaki diakrytyczne w kodzie},label={lst:plchr}]{auxiliary/start.c}
-
-Można zauważyć, że oryginalny plik \texttt{start.c} z~katalogu \texttt{auxiliary} 
-zawiera więcej linii, a~tutaj zamieszczono tylko wybrane (od 2 do 6). 
-Można też zmienić im numerację linii parametrem \verb|firstnumber|, np. \verb|firstnumber=5|.
-
-\subsubsection{Numerowanie i punktowanie}
-
-\begin{enumerate}[label=\arabic*), leftmargin=1.25cm]
-	\item Pierwszy poziom (stosuje się numerowanie lub punktowanie). Formatowanie:
-	akapit wyjustowany, wcięcie od lewej 0,75 cm, wysunięcie co 0,5 cm.
-	\item Znakiem numerowania jest liczba (z kropką lub nawiasem).
-		\begin{itemize}[label={--},labelsep=0.4cm,leftmargin=0.6cm]
-			\item drugi poziom (stosuje się wyłącznie punktowanie). Formatowanie: akapit
-			wyjustowany, wcięcie od lewej 1,25 cm, wysunięcie co 0,5 cm,
-			\item znakiem punktowania jest łącznik lub mała litera alfabetu (z nawiasem). Nie
-			zaleca się stosowania kropek, strzałek itp.,
-			\item punktowane akapity rozpoczyna się minuskułą (małą literą), na końcu akapitu
-			stawia się przecinek, ostatni punktowany akapit kończy się kropką.
-		\end{itemize}
-	\item Numerowane akapity rozpoczyna się majuskułą (wielką literą) i kończy kropką.
-	\item Należy zwrócić uwagę, aby nie rozdzielać numerowania/punktowania pomiędzy
-	kolejnymi stronami tekstu.
-\end{enumerate}
-
-\subsubsection{Uwagi końcowe dla użytkowników \LaTeX}
-Kompilację dokumentu można przyspieszyć dodając opjconalny 
-parametr \texttt{draft} do polecenia \texttt{\symbol{92}documentclass}. 
-Wówczas rysunki nie będą zamieszczane, a~w~ich miejscu pojawi się prostokąt z obrysem.
-Ponadto tryb ten zaznacza również fragmenty tekstu wychodzące 
-na margines sygnalizowane przez komunikaty podczas kompilacji 
-np. \texttt{Overfull \symbol{92}hbox (14.2264pt too wide) in paragraph at lines ...}.
-Takie naruszenia marginesów oznaczane są czarnym prostokątem na końcu wystającej linii. 
-Gdy linia ewidentnie nie mieści się w~obszarze strony, to 
-również ten prostokąt nie zostanie zaznaczony. 
-Dlatego warto przejrzeć finalną postać tekstu, aby wykryć 
-potencjalne niewielkie naruszenia marginesu.
-
-\subsection{Wykaz literatury}
-
-W wykazie literatury zamieszcza się wyłącznie pozycje, na które powołano się
-w pracy. Kolejność numerów w wykazie -- zgodna z kolejnością pojawiania się danej
-pozycji w~tekście.
 
 Format akapitu: akapit wyjustowany, wysunięcie 0,75 cm. Prawidłowo opracowany
 wykaz został zaprezentowany w niniejszym dokumencie w odpowiednim 
@@ -478,8 +571,14 @@ czasopiśmie, \cite{dokum} -- karta katalogowa).
 
 \addcontentsline{toc}{section}{Literatura}
 
-\begin{thebibliography}{4}
+\begin{thebibliography}{9}
 \bibitem{str} http://weii.portal.prz.edu.pl/pl/materialy-do-pobrania. Dostęp 5.01.2015.
+\bibitem{uciVoting} Congressional Voting Records. UCI Machine Learning Repository, 
+\texttt{https://archive.ics.uci.edu/dataset/105/congressional+voting+records}. Dostęp 21.03.2026.
+\bibitem{geronML} Geron A.: Uczenie maszynowe z użyciem Scikit-Learn, Keras i TensorFlow. Helion.
+\bibitem{wikiMCP} Neuron McCullocha-Pittsa, Wikipedia Polska. \url{https://pl.wikipedia.org/wiki/Neuron_McCullocha-Pittsa}. Dostęp 21.03.2026.
+\bibitem{zajdelLab} Zajdel R.: Sztuczna inteligencja, Laboratorium. \url{https://materialy.kia.prz.edu.pl/pracownik/pliki/34/\%C4\%86WICZENIE\%208.1.pdf}. Dostęp 21.03.2026.
+\bibitem{zajdelLab9} Zajdel R.: Sztuczna inteligencja, Laboratorium. \url{https://materialy.kia.prz.edu.pl/pracownik/pliki/34/\%C4\%86WICZENIE\%209.pdf}. Dostęp 21.03.2026.
 \bibitem{Jakubczyk1997} Jakubczyk T., Klette A.: Pomiary w akustyce. WNT, Warszawa 1997.
 \bibitem{Barski2011} Barski S.: Modele transmitancji. Elektronika praktyczna, nr 7/2011, str. 15-18.
 \bibitem{dokum} Czujnik S200. Dokumentacja techniczno-ruchowa. Lumel, Zielona Góra, 2001.
