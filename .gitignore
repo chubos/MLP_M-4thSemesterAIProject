@@ -27,7 +27,7 @@
 # Editor settings
 .vscode/
 .idea/
-
+__pycache__/
 # OS files
 Thumbs.db
 Desktop.ini

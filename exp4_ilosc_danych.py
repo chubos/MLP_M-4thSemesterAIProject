@@ -1,0 +1,83 @@
+# -*- coding: utf-8 -*-
+import hickle as hkl
+import numpy as np
+import matplotlib.pyplot as plt 
+from sklearn.model_selection import train_test_split
+from timeit import default_timer as timer
+
+from mlp_core import mlp_m_3w # IMPORT NASZEJ SIECI
+
+# 1. Wczytywanie danych
+x, y_t, x_norm, x_n_s, y_t_s = hkl.load('kongres.hkl')
+
+# Transpozycja na potrzeby podziału (scikit-learn woli format [próbki, cechy])
+X_all = x_norm.T  
+Y_all = y_t.T     
+
+# 2. Parametry sieci
+K1_fixed, K2_fixed = 5, 8
+max_epoch = 60
+err_goal = 0.05 
+disp_freq = 10 
+lr_fixed = 1e-3
+mc_fixed = 0.9
+
+# 3. Zostawiamy 20% danych jako stały zbiór testowy, którego sieć NIGDY nie zobaczy podczas nauki
+X_train_pula, X_test, Y_train_pula, Y_test = train_test_split(
+    X_all, Y_all, test_size=0.2, stratify=Y_all, random_state=42
+)
+
+# Frakcje danych treningowych do przetestowania: 10%, 20%, 40%, 60%, 80%, 100%
+frakcje = [0.1, 0.2, 0.4, 0.6, 0.8, 1.0]
+
+wyniki_treningowe = []
+wyniki_testowe = []
+liczba_probek_oX = []
+
+print("--- EKSPERYMENT 4: WPŁYW ILOŚCI DANYCH NA NAUKĘ ---")
+start = timer()
+
+for frac in frakcje:
+    # Pobieramy odpowiedni procent z puli treningowej
+    if frac < 1.0:
+        X_train_sub, _, Y_train_sub, _ = train_test_split(
+            X_train_pula, Y_train_pula, train_size=frac, stratify=Y_train_pula, random_state=42
+        )
+    else:
+        X_train_sub, Y_train_sub = X_train_pula, Y_train_pula
+        
+    aktualna_liczba = X_train_sub.shape[0]
+    liczba_probek_oX.append(aktualna_liczba)
+    print(f"Trenowanie na {aktualna_liczba} próbkach ({frac*100}% puli)...")
+    
+    # Tworzymy czystą sieć (pamiętamy o powrocie do formatu [cechy, próbki] używając .T)
+    mlp_test = mlp_m_3w(X_train_sub.T, Y_train_sub.T, K1_fixed, K2_fixed, lr_fixed, err_goal, disp_freq, mc_fixed, max_epoch, True)
+    mlp_test.train(X_train_sub.T, Y_train_sub.T)
+    
+    # --- OCENA SKUTECZNOŚCI ---
+    # Na danych treningowych (tych z podzbioru)
+    pred_train = mlp_test.predict(X_train_sub.T)
+    pk_train = np.mean(np.where(pred_train >= 0, 1, -1) == Y_train_sub.T) * 100
+    wyniki_treningowe.append(pk_train)
+    
+    # Na STAŁYM zbiorze testowym
+    pred_test = mlp_test.predict(X_test.T)
+    pk_test = np.mean(np.where(pred_test >= 0, 1, -1) == Y_test.T) * 100
+    wyniki_testowe.append(pk_test)
+
+print(f"Zakończono w {timer()-start:.2f} s.\n")
+
+# 4. Rysowanie wykresu
+plt.figure(figsize=(10, 6))
+plt.plot(liczba_probek_oX, wyniki_treningowe, 'o-', color='crimson', label='Dane treningowe (znane)')
+plt.plot(liczba_probek_oX, wyniki_testowe, 'o-', color='mediumseagreen', label='Dane testowe (nieznane)')
+
+plt.title('Krzywa uczenia w zależności od ilości danych', fontsize=14)
+plt.xlabel('Liczba kongresmenów w zbiorze uczącym', fontsize=12)
+plt.ylabel('Skuteczność PK [%]', fontsize=12)
+plt.legend(loc="lower right")
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.ylim([min(wyniki_testowe)-5, 105]) 
+
+plt.savefig("Fig.4_Ilosc_Danych_kongres.png", bbox_inches='tight')
+plt.show()

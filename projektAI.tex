@@ -79,7 +79,7 @@ Przykładowe rekordy ze zbioru wejściowego (wraz z wystąpieniami znaku \texttt
 \subsection{Przygotowanie danych}
 W ramach przygotowania danych zastosowano stały schemat, w którym głosy na tak (y) zamieniono na wartość 1, głosy przeciwne (n) na -1, natomiast wszelkie braki, wstrzymania się lub nieobecności oznaczone jako ? zamieniono na neutralną wartość 0.
 
-Równocześnie przekształcono etykietę klasy, przypisując demokratom identyfikator 0, a republikanom 1. Cała operacja została zrealizowana przy użyciu biblioteki Pandas, co pozwoliło na szybkie przetworzenie rekordów do postaci czystego pliku CSV.
+Równocześnie przekształcono etykietę klasy, przypisując demokratom identyfikator -1, a republikanom 1. Cała operacja została zrealizowana przy użyciu biblioteki Pandas, co pozwoliło na szybkie przetworzenie rekordów do postaci czystego pliku CSV.
 
 Implementację transformacji danych przedstawiono na listingu \ref{lst:transformacja_py}.
 
@@ -101,6 +101,25 @@ Implementację transformacji danych przedstawiono na listingu \ref{lst:transform
 
 Po wykonaniu transformacji, dane zostały zapisane do nowego pliku \texttt{transformed\_votes.csv}, który zawiera już zakodowane wartości głosowań oraz etykiety klas.
 Te dane są już gotowe do wykorzystania w procesie trenowania sieci neuronowej.
+
+Na końcu etapu przygotowania danych wykonano dodatkową konwersję pliku \texttt{CSV} do formatu \texttt{Hickle} (\texttt{.hkl}) przy pomocy skryptu \texttt{hkl.py}. Celem tej operacji było przyspieszenie i uproszczenie dalszego wczytywania danych w programie uczącym: zamiast każdorazowo parsować plik tekstowy \texttt{CSV}, aplikacja ładuje bezpośrednio gotowe tablice \texttt{NumPy} z pliku binarnego \texttt{kongres.hkl}.
+
+Skrypt zapisuje dane w postaci listy: \texttt{[x, y\_t, x\_norm, x\_n\_s, y\_t\_s]}. W tym projekcie przyjęto \texttt{x\_norm = x}, a część oznaczona jako zbiór testowy w pliku \texttt{.hkl} jest taka sama jak zbiór pełny (\texttt{x\_n\_s = x\_norm}, \texttt{y\_t\_s = y\_t}). Oznacza to, że nie wykonano tu stałego podziału typu train/test podczas zapisu do \texttt{.hkl}; właściwy podział realizowany jest później dynamicznie w trakcie walidacji krzyżowej \texttt{StratifiedKFold}.
+
+Implementację konwersji do formatu \texttt{Hickle} przedstawiono na listingu \ref{lst:hkl_py}.
+
+\lstinputlisting[
+language=Python,
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=40,
+breaklines=true,
+numbers=left,
+frame=single,
+float,
+caption={Skrypt konwersji \texttt{transformed\_votes.csv} do \texttt{kongres.hkl} (\texttt{hkl.py})},
+label={lst:hkl_py}
+]{hkl.py}
 
 Przykładowe rekordy po transformacji przedstawiono na listingu \ref{lst:transformed_votes_sample}.
 
@@ -273,18 +292,18 @@ h = \tanh(z).
 
 Dane wejściowe mają wartości z przedziału $\{-1,0,1\}$, czyli są centrowane wokół zera i nie wymagają dodatkowej normalizacji. To dobrze współgra z funkcją $\tanh$, która zwraca wartości z zakresu $(-1,1)$ i dobrze pracuje dla sygnałów symetrycznych względem zera.
 
-W warstwie wyjściowej zastosowano funkcję sigmoidalną:
+W warstwie wyjściowej zastosowano funkcję \texttt{tanh}:
 \begin{equation}
-\hat{y} = \sigma(z) = \frac{1}{1 + e^{-z}}.
+\hat{y} = \tanh(z).
 \end{equation}
 
-Taki wybór jest naturalny dla zadania binarnego, ponieważ etykiety klas mają postać $0$ i $1$. Wyjście sigmoidy można bezpośrednio interpretować jako prawdopodobieństwo klasy $1$; przykładowo wynik $0{,}85$ oznacza 85\% prawdopodobieństwa przynależności do klasy $1$.
+Taki wybór jest naturalny dla zadania binarnego, ponieważ etykiety klas mają postać $-1$ i $1$. Wyjście funkcji \texttt{tanh} można interpretować jako wynik dodatni lub ujemny, co bezpośrednio wspiera decyzję klasową przez znak wyjścia.
 
 Podsumowanie struktury modelu:
 \begin{itemize}[label={\textbullet}]
 \item Wejście: $\mathbf{X}=[x_1,x_2,\dots,x_{16}]$, gdzie $x_i \in \{-1,0,1\}$
 \item Warstwy ukryte: aktywacja $\tanh$
-\item Warstwa wyjściowa: aktywacja sigmoid (dla klas $0/1$)
+\item Warstwa wyjściowa: aktywacja $	anh$ (dla klas $-1/1$)
 \end{itemize}
 
 
@@ -518,41 +537,519 @@ W praktyce czesto przyjmuje sie $m_c\approx 0{,}9$--$0{,}95$, co zwykle zwieksza
 
 \section{Implementacja sieci neuronowej}
 
+Implementację modelu wydzielono do osobnego modułu \texttt{mlp\_core.py}. Taki podział upraszcza prowadzenie eksperymentów: skrypty badawcze (np. strojenie architektury i parametrów uczenia) korzystają z jednej, wspólnej klasy sieci i przekazują do niej jedynie zestaw hiperparametrów.
+
+\subsection{Struktura modułu \texttt{mlp\_core.py}}
+W pliku \texttt{mlp\_core.py} znajduje się klasa \texttt{mlp\_m\_3w}, która implementuje sieć \texttt{MLP} z dwiema warstwami ukrytymi i jedną warstwą wyjściową. Moduł realizuje:
+\begin{itemize}[label={\textbullet}]
+\item inicjalizację wag i biasów dla warstw \texttt{L-K1-K2-K3},
+\item propagację sygnału w przód (\texttt{predict}),
+\item uczenie metodą wstecznej propagacji błędu z momentum (\texttt{train}),
+\item ocenę jakości przez walidację krzyżową \texttt{StratifiedKFold} (\texttt{train\_CV}).
+\end{itemize}
+
+W implementacji wykorzystano funkcje pomocnicze z modułu \texttt{nnet\_jit4.py}: \texttt{tansig}, \texttt{deltatan\_out}, \texttt{deltatan}, \texttt{learnbp} oraz \texttt{sumsqr}.
+
+Pełny kod modułu przedstawiono na listingu \ref{lst:mlp_core_py}.
+
+\lstinputlisting[
+language=Python,
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=220,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Implementacja klasy \texttt{mlp\_m\_3w} w pliku \texttt{mlp\_core.py}},
+label={lst:mlp_core_py}
+]{mlp_core.py}
+
+\subsection{Opis działania kodu \texttt{mlp\_core.py}}
+Najważniejsze elementy implementacji z listingu \ref{lst:mlp_core_py} działają następująco:
+\begin{itemize}[label={\textbullet}]
+\item \texttt{\_\_init\_\_}: ustawia rozmiary sieci i hiperparametry (\texttt{K1}, \texttt{K2}, \texttt{lr}, \texttt{mc}, \texttt{max\_epoch}), inicjalizuje wagi oraz zapisuje je do pliku \texttt{wagi3w.hkl} albo odczytuje wcześniej zapisane.
+\item \texttt{predict}: realizuje propagację w przód. Dwie warstwy ukryte używają funkcji aktywacji \texttt{tansig}, a wyjście ma aktywację \texttt{tansig} (\texttt{tanh}). Wynikiem jest wektor odpowiedzi sieci \texttt{y3} o wartościach z zakresu $(-1,1)$.
+\item \texttt{train}: wykonuje pętlę uczenia epoka po epoce. W każdej epoce obliczany jest błąd \texttt{e}, wartość \texttt{SSE} i skuteczność klasyfikacji \texttt{PK}. Następnie liczony jest gradient metodą backpropagation i aktualizowane są wagi oraz biasy z członem momentum.
+\item \texttt{train\_CV}: dzieli dane na \texttt{CV} foldów ze stratyfikacją klas i dla każdego podziału wykonuje uczenie oraz test. Na końcu zwracana jest średnia skuteczność \texttt{PK} ze wszystkich foldów.
+\item Blok \texttt{if \_\_name\_\_ == '\_\_main\_\_'}: umożliwia szybki test modułu bez uruchamiania pełnego eksperymentu, łącznie z wykresem przebiegu \texttt{SSE} i podglądem predykcji dla pierwszych próbek.
+\end{itemize}
+
+Z punktu widzenia praktycznego, taki podział na moduł rdzeniowy i osobne skrypty eksperymentalne pozwala łatwo porównywać różne konfiguracje bez powielania kodu odpowiedzialnego za sam algorytm uczenia.
+
+\subsection{Rola modułu \texttt{nnet\_jit4.py}}
+W projekcie kluczową rolę pełni również plik \texttt{nnet\_jit4.py}, który jest biblioteką
+niskopoziomowych funkcji obliczeniowych używanych przez klasę \texttt{mlp\_m\_3w}.
+Najprościej można go traktować jako "silnik numeryczny" dla sieci neuronowej:
+zamiast implementować wszystkie operacje matematyczne bezpośrednio w klasie modelu,
+wydzielono je do jednego modułu narzędziowego.
+
+Taki podział ma kilka zalet:
+\begin{itemize}[label={\textbullet}]
+\item upraszcza kod głównej klasy sieci (\texttt{mlp\_core.py}),
+\item ułatwia testowanie i modyfikację pojedynczych elementów algorytmu,
+\item pozwala przyspieszyć obliczenia dzięki dekoratorowi \texttt{@njit} z biblioteki \texttt{Numba}.
+\end{itemize}
+
+W praktyce oznacza to, że \texttt{mlp\_core.py} odpowiada za logikę uczenia i organizację pętli,
+natomiast \texttt{nnet\_jit4.py} odpowiada za szybkie obliczenia: inicjalizację wag,
+propagację aktywacji, obliczanie gradientów i krok aktualizacji parametrów.
+
+Pełny kod modułu przedstawiono na listingu \ref{lst:nnet_jit4_py}.
+
+\lstinputlisting[
+language=Python,
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=220,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Moduł funkcji numerycznych sieci neuronowej \texttt{nnet\_jit4.py}},
+label={lst:nnet_jit4_py}
+]{nnet_jit4.py}
+
+\subsection{Co dokładnie wykorzystujemy z \texttt{nnet\_jit4.py}}
+W aktualnej implementacji modelu (\texttt{mlp\_core.py}) używane są następujące funkcje
+z listingu \ref{lst:nnet_jit4_py}:
+
+\begin{itemize}[label={\textbullet}]
+\item \texttt{nwtan(s, p)}
+Inicjalizacja wag i biasów dla warstw ukrytych z aktywacją \texttt{tansig}.
+Funkcja tworzy rozkład startowych wag o skali dopasowanej do liczby wejść i neuronów,
+co poprawia stabilność pierwszych epok uczenia.
+
+\item \texttt{rands(a, b)}
+Losowa inicjalizacja warstwy wyjściowej (wagi i biasy).
+W tym projekcie warstwa wyjściowa jest liniowa, dlatego do startu wystarcza
+prosta inicjalizacja losowa z zakresu \texttt{[-1, 1]}.
+
+\item \texttt{tansig(n, b)}
+Funkcja aktywacji \texttt{tanh}-sigmoid dla obu warstw ukrytych.
+Przekształca pobudzenie neuronu do zakresu \texttt{(-1, 1)}, co pasuje
+do kodowania wejść \texttt{-1/0/1} i dobrze współpracuje z backpropagation.
+
+\item \texttt{tansig(n, b)}
+Aktywacja \texttt{tanh} warstwy wyjściowej.
+Model zwraca wartość z zakresu \texttt{(-1, 1)}, która jest interpretowana przez znak jako decyzja klasowa.
+
+\item \texttt{sumsqr(a)}
+Oblicza sumę kwadratów błędów \texttt{SSE}:
+\begin{equation}
+SSE = \sum_{q=1}^{Q} e_q^2.
+\end{equation}
+Ta miara jest monitorowana podczas uczenia i używana do oceny zbieżności.
+
+\item \texttt{deltatan\_out(a, d)}
+Wyznacza sygnał błędu (delta) dla warstwy wyjściowej z aktywacją \texttt{tansig}.
+W tym przypadku używana jest pochodna $1-a^2$,
+dlatego delta jest skalowana lokalnym nachyleniem funkcji aktywacji.
+
+\item \texttt{deltatan(a, d, w)}
+Wyznacza delty dla warstw ukrytych z aktywacją \texttt{tansig},
+uwzględniając pochodną $1-a^2$ oraz propagację błędu przez macierze wag
+z warstwy następnej.
+
+\item \texttt{learnbp(p, d, lr)}
+Oblicza gradientowy krok aktualizacji wag i biasów:
+\begin{equation}
+\Delta \mathbf{W} = \eta\, \delta\, \mathbf{p}^T,
+\qquad
+\Delta \mathbf{b} = \eta\, \delta\, \mathbf{1}.
+\end{equation}
+Wartości te są następnie łączone w \texttt{mlp\_core.py} z członem momentum.
+\end{itemize}
+
+\subsection{Funkcje obecne w module, ale nieużywane w tej wersji projektu}
+W module znajdują się także funkcje ogólnego przeznaczenia:
+\texttt{logsig}, \texttt{deltalog}, \texttt{nwlog}, \texttt{normRows}, \texttt{randX}, \texttt{randn}.
+Nie są one wywoływane bezpośrednio w obecnej konfiguracji klasyfikatora,
+ale pozostają dostępne do przyszłych wariantów modelu,
+np. z logistyczną aktywacją warstw lub inną strategią inicjalizacji.
+
+\subsection{Dlaczego ten moduł jest ważny dla całego projektu}
+Bez modułu \texttt{nnet\_jit4.py} kod implementacji sieci byłby znacznie dłuższy,
+trudniejszy w utrzymaniu i wolniejszy obliczeniowo. Rozdzielenie warstwy
+"logiki eksperymentu" (skrypty \texttt{exp*.py}), warstwy "logiki modelu"
+(\texttt{mlp\_core.py}) oraz warstwy "obliczeń numerycznych" (\texttt{nnet\_jit4.py})
+tworzy czytelną i skalowalną strukturę projektu.
+
+W kontekście przeprowadzonych eksperymentów oznacza to, że wszystkie testy
+architektury, hiperparametrów, ważności cech i przeuczenia korzystają
+z tego samego, spójnego zestawu funkcji numerycznych. Dzięki temu wyniki
+poszczególnych eksperymentów są porównywalne i nie zależą od różnic
+w implementacji podstawowych operacji sieciowych.
+
+
+
 \section{Eksperymenty}
 
-Tutaj należy zamieścić wprowadzenie do tego rozdziału.
+W rozdziale eksperymentalnym przeprowadzono serię badań mających na celu dobór konfiguracji sieci MLP
+tak, aby uzyskać możliwie wysoką skuteczność klasyfikacji partii politycznej na podstawie wektora głosowań.
+Każdy eksperyment testuje inny aspekt modelu: architekturę sieci, parametry uczenia oraz wpływ danych
+na stabilność i jakość predykcji. Jako główną miarę porównawczą przyjęto skuteczność klasyfikacji
+\texttt{PK [\%]} obliczaną w walidacji krzyżowej.
 
 \subsection{Eksperyment nr 1}
 
-Tutaj należy zamieścić wprowadzenie do tego eksperyemntu.
+W pierwszym eksperymencie badano wpływ liczby neuronów w dwóch warstwach ukrytych
+(\texttt{K1}, \texttt{K2}) na jakość klasyfikacji. Celem było znalezienie takiej architektury,
+która zapewnia najwyższą średnią skuteczność \texttt{PK} przy stałych parametrach uczenia.
 
-\subsubsection{Algorytm 1}
+\subsubsection*{Założenia eksperymentu}
+Przyjęto następującą konfigurację:
+\begin{itemize}[label={\textbullet}]
+\item stałe parametry uczenia: \texttt{lr = 1e-3}, \texttt{mc = 0.9}, \texttt{max\_epoch = 40},
+\item przeszukiwana siatka architektury: $K1, K2 \in \{1, 2, \ldots, 10\}$,
+\item ocena jakości: średnie \texttt{PK [\%]} z \texttt{10}-krotnej walidacji krzyżowej
+\texttt{StratifiedKFold}.
+\end{itemize}
 
-Przedstawienie wyników eksperyemntu nr 1 dla pierwszego z badanych algorytmów.
+Implementację eksperymentu przedstawiono na listingu \ref{lst:exp1_architektura_py}.
 
-\subsubsection{Algorytm 2}
+\lstinputlisting[
+language=Python,
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=120,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Skrypt eksperymentu nr 1: przeszukiwanie siatki \texttt{K1} i \texttt{K2} (\texttt{exp1\_architektura.py})},
+label={lst:exp1_architektura_py}
+]{exp1_architektura.py}
 
-Przedstawienie wyników eksperyemntu nr 1 dla drugiego z badanych algorytmów.
+Na listingu \ref{lst:exp1_architektura_py} skrypt:
+\begin{itemize}[label={\textbullet}]
+\item wczytuje dane \texttt{kongres.hkl} i wybiera macierz wejściową \texttt{x\_norm},
+\item definiuje siatkę wartości \texttt{K1} i \texttt{K2},
+\item dla każdej pary \texttt{(K1, K2)} uczy model \texttt{mlp\_m\_3w} i oblicza \texttt{PK} w walidacji \texttt{CV},
+\item zapisuje wyniki do macierzy \texttt{PK\_2D\_K1K2},
+\item wyznacza i wypisuje najlepszą parę \texttt{K1}, \texttt{K2},
+\item rysuje powierzchnię 3D zależności \texttt{PK = f(K1, K2)}.
+\end{itemize}
 
-\subsubsection{Algorytm 3}
+Wynik eksperymentu przedstawiono na rysunku \ref{fig:exp1_k1k2_surface}.
 
-Przedstawienie wyników eksperyemntu nr 1 dla trzeciego z badanych algorytmów.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{Fig.1_PK_K1K2_kongres.png}
+\caption{Eksperyment nr 1: skuteczność \texttt{PK [\%]} w funkcji liczby neuronów \texttt{K1} i \texttt{K2}}
+\label{fig:exp1_k1k2_surface}
+\end{figure}
 
-\subsubsection{Algorytm 4}
-
-Przedstawienie wyników eksperyemntu nr 1 dla czwartego z badanych algorytmów.
+\textbf{Wniosek:} na podstawie uzyskanych wyników jako konfigurację optymalną do kolejnych eksperymentów
+przyjęto \texttt{K1 = 5} oraz \texttt{K2 = 8}.
 
 \subsection{Eksperyment nr 2}
 
-Tutaj należy zamieścić wprowadzenie do tego eksperyemntu.
+W eksperymencie nr 2 badano wpływ parametrów uczenia na skuteczność klasyfikacji,
+przy ustalonej architekturze z eksperymentu nr 1 (\texttt{K1 = 5}, \texttt{K2 = 8}).
+Przeszukiwano pary wartości współczynnika uczenia \texttt{lr} oraz współczynnika momentum \texttt{mc}
+i wybierano konfigurację o najwyższej średniej skuteczności \texttt{PK}.
+
+\subsubsection*{Założenia eksperymentu}
+W badaniu przyjęto następującą konfigurację:
+\begin{itemize}[label={\textbullet}]
+\item stała architektura sieci: \texttt{K1 = 5}, \texttt{K2 = 8},
+\item stałe warunki uczenia: \texttt{max\_epoch = 40}, \texttt{err\_goal = 0.05},
+\item przeszukiwana siatka parametrów: $lr \in [10^{-5}, 10^{-2}]$ (skala logarytmiczna),
+\item przeszukiwana siatka parametrów: $mc \in \{0.05, 0.10, \ldots, 0.95\}$,
+\item ocena jakości: średnia skuteczność \texttt{PK [\%]} z \texttt{10}-krotnej walidacji krzyżowej.
+\end{itemize}
+
+Implementację eksperymentu przedstawiono na listingu \ref{lst:exp2_parametry_uczenia_py}.
+
+\lstinputlisting[
+language=Python,
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=140,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Skrypt eksperymentu nr 2: przeszukiwanie siatki \texttt{lr} i \texttt{mc} (\texttt{exp2\_parametry\_uczenia.py})},
+label={lst:exp2_parametry_uczenia_py}
+]{exp2_parametry_uczenia.py}
+
+Na listingu \ref{lst:exp2_parametry_uczenia_py} skrypt:
+\begin{itemize}[label={\textbullet}]
+\item wczytuje dane z pliku \texttt{kongres.hkl} i wybiera macierz cech \texttt{x\_norm},
+\item ustala architekturę sieci i parametry stałe eksperymentu,
+\item buduje dwuwymiarową siatkę hiperparametrów \texttt{(lr, mc)},
+\item dla każdej pary \texttt{(lr, mc)} uruchamia uczenie modelu oraz ocenę \texttt{PK} metodą \texttt{StratifiedKFold},
+\item zapisuje wyniki do macierzy \texttt{PK\_2D\_lrmc},
+\item wyznacza najlepszy punkt siatki i wypisuje najlepsze \texttt{lr}, \texttt{mc} oraz \texttt{PK},
+\item tworzy wykres powierzchniowy 3D i zapisuje go jako \texttt{Fig.2\_PK\_lrmc\_kongres.png}.
+\end{itemize}
+
+Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp2_lrmc_surface}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{Fig.2_PK_lrmc_kongres.png}
+\caption{Eksperyment nr 2: skuteczność \texttt{PK [\%]} w funkcji \texttt{log10(lr)} i \texttt{mc}}
+\label{fig:exp2_lrmc_surface}
+\end{figure}
+
+Analiza powierzchni wskazuje, że model osiąga wysoką skuteczność w relatywnie szerokim obszarze parametrów,
+jednak dla zbyt dużych wartości \texttt{lr} pojawiają się wyraźne spadki \texttt{PK}. Oznacza to,
+że zbyt agresywne kroki aktualizacji wag destabilizują uczenie i pogarszają jakość klasyfikacji.
+
+\textbf{Tymczasowo przyjęte (losowe) wartości do późniejszej podmiany:}
+\begin{itemize}[label={\textbullet}]
+\item \texttt{lr = 7e-4}
+\item \texttt{mc = 0.85}
+\end{itemize}
+
+\textbf{Wniosek:} eksperyment nr 2 potwierdza, że właściwy dobór parametrów uczenia
+ma kluczowe znaczenie dla stabilności i jakości działania sieci. W wersji końcowej raportu
+wartości \texttt{lr} i \texttt{mc} należy uzupełnić dokładnie zgodnie z najlepszym punktem
+wyznaczonym przez skrypt.
 
 \subsection{Eksperyment nr 3}
 
-Tutaj należy zamieścić wprowadzenie do tego eksperyemntu.
+W eksperymencie nr 3 przeprowadzono analizę ważności poszczególnych głosowań
+(\emph{ablation study}), aby sprawdzić, które cechy wejściowe mają największy wpływ
+na decyzję sieci neuronowej. Celem było oszacowanie, o ile pogarsza się skuteczność
+klasyfikacji po usunięciu informacji o pojedynczym głosowaniu.
+
+\subsubsection*{Założenia eksperymentu}
+W badaniu przyjęto następującą procedurę:
+\begin{itemize}[label={\textbullet}]
+\item punkt odniesienia: model bazowy trenowany na kompletnym wektorze 16 głosowań,
+\item dla każdej cechy wejściowej wykonywano osobny test,
+\item w teście cecha była neutralizowana przez podstawienie wartości \texttt{0} dla wszystkich próbek,
+\item jako miarę wpływu przyjęto spadek skuteczności:
+\end{itemize}
+
+\begin{equation}
+\Delta PK_i = PK_{bazowe} - PK_{bez\ cechy\ i}.
+\end{equation}
+
+Im większa wartość $\Delta PK_i$, tym większa ważność danej cechy dla modelu.
+
+Implementację eksperymentu przedstawiono na listingu \ref{lst:exp3_waznosc_glosowan_py}.
+
+\lstinputlisting[
+language=Python,
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=220,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Skrypt eksperymentu nr 3: analiza ważności głosowań (\texttt{exp3\_waznosc\_glosowan.py})},
+label={lst:exp3_waznosc_glosowan_py}
+]{exp3_waznosc_glosowan.py}
+
+Na listingu \ref{lst:exp3_waznosc_glosowan_py} skrypt:
+\begin{itemize}[label={\textbullet}]
+\item oblicza wynik bazowy \texttt{PK} dla pełnego zestawu cech,
+\item iteracyjnie zeruje każdą cechę (każde głosowanie) i trenuje model ponownie,
+\item wyznacza spadek skuteczności względem modelu bazowego,
+\item zapisuje wyniki w wektorze \texttt{spadki\_pk},
+\item tworzy wykres słupkowy, gdzie wysokość słupka odpowiada sile wpływu danej cechy.
+\end{itemize}
+
+Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp3_vote_importance}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.95\textwidth]{Fig.3_Waznosc_Glosowan_kongres.png}
+\caption{Eksperyment nr 3: ważność poszczególnych głosowań wyrażona spadkiem \texttt{PK [\%]} po neutralizacji cechy}
+\label{fig:exp3_vote_importance}
+\end{figure}
+
+Analiza wykresu pokazuje, że wpływ cech na decyzję sieci nie jest równomierny.
+Część głosowań powoduje wyraźny spadek skuteczności po neutralizacji,
+co oznacza, że niosą silną informację rozróżniającą klasy. Jednocześnie dla części cech
+spadek jest niewielki (lub bliski zeru), co sugeruje ich mniejszą przydatność
+w obecnej konfiguracji modelu.
+
+\textbf{Wniosek:} eksperyment nr 3 potwierdza, że klasyfikacja opiera się głównie na podzbiorze
+najbardziej informatywnych głosowań. Wynik ten uzasadnia dalsze analizy selekcji cech,
+ponieważ redukcja mniej istotnych wejść może uprościć model bez istotnej utraty jakości.
 
 \subsection{Eksperyment nr 4}
 
-Tutaj należy zamieścić wprowadzenie do tego eksperyemntu.
+W eksperymencie nr 4 badano wpływ liczby danych uczących na jakość klasyfikacji.
+Założeniem było sprawdzenie, jak zmienia się skuteczność modelu na danych znanych
+(treningowych) oraz na danych nieznanych (testowych), gdy stopniowo zwiększa się
+rozmiar zbioru uczącego.
+
+\subsubsection*{Założenia eksperymentu}
+W badaniu przyjęto następującą procedurę:
+\begin{itemize}[label={\textbullet}]
+\item dane podzielono na stałą pulę uczącą i stały zbiór testowy (\texttt{20\%}),
+\item z puli uczącej tworzono podzbiory o frakcjach: \texttt{10\%, 20\%, 40\%, 60\%, 80\%, 100\%},
+\item dla każdego podzbioru trenowano nową instancję sieci,
+\item po uczeniu mierzono skuteczność \texttt{PK} oddzielnie na danych treningowych i testowych.
+\end{itemize}
+
+Implementację eksperymentu przedstawiono na listingu \ref{lst:exp4_ilosc_danych_py}.
+
+\lstinputlisting[
+language=Python,
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=220,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Skrypt eksperymentu nr 4: wpływ liczby danych uczących (\texttt{exp4\_ilosc\_danych.py})},
+label={lst:exp4_ilosc_danych_py}
+]{exp4_ilosc_danych.py}
+
+Na listingu \ref{lst:exp4_ilosc_danych_py} skrypt:
+\begin{itemize}[label={\textbullet}]
+\item przygotowuje podział \texttt{train/test} z zachowaniem proporcji klas (\texttt{stratify}),
+\item tworzy serię coraz większych podzbiorów uczących,
+\item dla każdego podzbioru trenuje sieć i oblicza \texttt{PK} na treningu oraz na teście,
+\item zapisuje wyniki do dwóch krzywych: treningowej i testowej,
+\item generuje wykres krzywych uczenia i zapisuje go jako \texttt{Fig.4\_Ilosc\_Danych\_kongres.png}.
+\end{itemize}
+
+Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp4_learning_curve}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{Fig.4_Ilosc_Danych_kongres.png}
+\caption{Eksperyment nr 4: skuteczność \texttt{PK [\%]} w funkcji liczby próbek uczących}
+\label{fig:exp4_learning_curve}
+\end{figure}
+
+Interpretacja wykresu jest zgodna z typowym przebiegiem krzywych uczenia.
+Dla małych zbiorów model może osiągać wysoką skuteczność na treningu,
+natomiast jakość na teście jest niższa i bardziej niestabilna. Wraz ze wzrostem
+liczby próbek uczących krzywa testowa zwykle rośnie i stabilizuje się,
+co wskazuje na lepszą zdolność uogólniania.
+
+\textbf{Wniosek:} zwiększanie liczby danych uczących poprawia stabilność i wiarygodność
+predykcji sieci. Eksperyment nr 4 pokazuje, że dalsze rozszerzanie zbioru danych
+jest jednym z najskuteczniejszych sposobów poprawy jakości modelu.
+
+\subsection{Eksperyment nr 5}
+
+W eksperymencie nr 5 analizowano zjawisko przeuczenia (\emph{overfitting})
+na podstawie przebiegu błędu treningowego i testowego w kolejnych epokach.
+Celem było wskazanie momentu, w którym dalsze uczenie nie poprawia
+uogólniania modelu i należy zastosować zatrzymanie uczenia (\emph{early stopping}).
+
+\subsubsection*{Założenia eksperymentu}
+W badaniu przyjęto konfigurację, która celowo zwiększa ryzyko przeuczenia:
+\begin{itemize}[label={\textbullet}]
+\item podział danych: mały zbiór uczący (\texttt{30\%}) i duży zbiór testowy (\texttt{70\%}),
+\item sieć o większej pojemności: \texttt{K1 = 8}, \texttt{K2 = 8},
+\item uczenie krokowe: jedna epoka na iterację i rejestracja błędu po każdym kroku,
+\item łączna liczba epok obserwacji: \texttt{150},
+\item monitorowana metryka: \texttt{SSE} oddzielnie dla treningu i testu.
+\end{itemize}
+
+Implementację eksperymentu przedstawiono na listingu \ref{lst:exp5_przeuczenie_py}.
+
+\lstinputlisting[
+language=Python,
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=220,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Skrypt eksperymentu nr 5: analiza przeuczenia i early stopping (\texttt{exp5\_przeuczenie.py})},
+label={lst:exp5_przeuczenie_py}
+]{exp5_przeuczenie.py}
+
+Na listingu \ref{lst:exp5_przeuczenie_py} skrypt:
+\begin{itemize}[label={\textbullet}]
+\item przygotowuje trudniejszy scenariusz uczenia (mało danych treningowych, większa sieć),
+\item uczy model epoka po epoce i po każdej epoce zapisuje \texttt{SSE} treningowe,
+\item po każdej epoce oblicza również \texttt{SSE} na zbiorze testowym,
+\item wyznacza epokę minimalnego błędu testowego,
+\item zaznacza ten punkt na wykresie jako rekomendowany moment \texttt{early stopping}.
+\end{itemize}
+
+Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp5_overfitting_curve}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{Fig.5_Przeuczenie_kongres.png}
+\caption{Eksperyment nr 5: przebieg błędu \texttt{SSE} na danych treningowych i testowych w kolejnych epokach}
+\label{fig:exp5_overfitting_curve}
+\end{figure}
+
+Typowy obraz przeuczenia pojawia się wtedy, gdy błąd treningowy stale maleje,
+a błąd testowy po osiągnięciu minimum zaczyna rosnąć. Oznacza to,
+że model coraz lepiej zapamiętuje zbiór uczący, ale traci zdolność uogólniania
+na nowe próbki.
+
+\textbf{Wniosek:} eksperyment nr 5 potwierdza potrzebę kontrolowania procesu uczenia
+za pomocą zbioru walidacyjnego/testowego i stosowania \texttt{early stopping}.
+Najlepszy punkt pracy sieci odpowiada minimum błędu testowego,
+niekoniecznie ostatniej epoce treningu.
+
+\subsection{Eksperyment nr 6}
+
+Eksperyment nr 6 jest rozwinięciem eksperymentu nr 5 i bada przeuczenie
+w warunkach celowo pogorszonej jakości danych uczących.
+Do zbioru treningowego wprowadzono szum etykiet, odwracając część klas,
+co symuluje błędne oznaczenia w danych rzeczywistych.
+
+\subsubsection*{Założenia eksperymentu}
+Konfiguracja eksperymentu pozostaje możliwie zbliżona do eksperymentu nr 5,
+aby porównanie było uczciwe:
+\begin{itemize}[label={\textbullet}]
+\item ten sam podział danych: trening \texttt{30\%}, test \texttt{70\%},
+\item ta sama architektura modelu: \texttt{K1 = 8}, \texttt{K2 = 8},
+\item ten sam tryb monitorowania błędów \texttt{SSE} po każdej epoce,
+\item dodatkowo: odwrócenie \texttt{40\%} etykiet w zbiorze treningowym.
+\end{itemize}
+
+Implementację eksperymentu przedstawiono na listingu \ref{lst:exp6_przeuczenie_py}.
+
+\lstinputlisting[
+language=Python,
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=240,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Skrypt eksperymentu nr 6: przeuczenie przy zaszumionych etykietach (\texttt{exp6\_przeuczenie.py})},
+label={lst:exp6_przeuczenie_py}
+]{exp6_przeuczenie.py}
+
+Na listingu \ref{lst:exp6_przeuczenie_py} skrypt:
+\begin{itemize}[label={\textbullet}]
+\item tworzy zbiór uczący i testowy jak w eksperymencie nr 5,
+\item celowo modyfikuje część etykiet uczących (szum klas),
+\item uczy sieć krokowo i zapisuje przebiegi \texttt{SSE} dla treningu i testu,
+\item wyznacza epokę minimalnego błędu testowego,
+\item rysuje krzywe błędu pokazujące wpływ zaszumienia na przeuczenie.
+\end{itemize}
+
+Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp6_overfitting_noise_curve}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\textwidth]{Fig.6_Przeuczenie_kongres_szum.png}
+\caption{Eksperyment nr 6: przebieg błędu \texttt{SSE} przy zaszumionych etykietach uczących}
+\label{fig:exp6_overfitting_noise_curve}
+\end{figure}
+
+\textbf{Różnica względem eksperymentu nr 5 i jej przyczyna:}
+\begin{itemize}[label={\textbullet}]
+\item W eksperymencie nr 5 model uczył się na etykietach zgodnych z rzeczywistą klasą.
+Przeuczenie wynikało głównie z relacji pojemności modelu do małej liczby próbek.
+\item W eksperymencie nr 6 model otrzymuje dodatkowo sprzeczne informacje (błędne etykiety),
+więc część procesu uczenia jest skierowana na zapamiętywanie przypadkowego szumu.
+\item Skutkiem jest zwykle szybsze pogorszenie błędu testowego i mniejsza stabilność
+uogólniania niż w eksperymencie nr 5.
+\end{itemize}
+
+\textbf{Wniosek:} eksperyment nr 6 pokazuje, że jakość etykiet jest krytyczna dla jakości modelu.
+Nawet przy tej samej architekturze i hiperparametrach obecność szumu etykiet
+silniej nasila przeuczenie. W praktyce oznacza to potrzebę czyszczenia danych,
+kontroli etykiet oraz ostrożniejszego doboru momentu \texttt{early stopping}.
 
 
 \section{Podsumowanie i wnioski}
