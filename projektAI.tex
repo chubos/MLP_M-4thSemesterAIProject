@@ -58,23 +58,26 @@ Opis poszczególnych atrybutów głosowań jest następujący:
 \end{itemize}
 
 \subsection{Brakujące dane}
-W zbiorze dane oznaczone symbolem \texttt{?} występują w 248 rekordach, co stanowi 57\% wszystkich rekordów. Jest to znacząca ilość, która nie może zostać zignorowana i usunięta. W analizie przyjęto, że takie przypadki mogą wynikać z braku jednoznacznego stanowiska, dlatego w etapie przygotowania danych kodowane są jako neutralne 0. Pozostałe wartości \texttt{y} i \texttt{n} kodowane są odpowiednio jako 1 i -1. Taki sposób kodowania pozwala na zachowanie informacji o braku jednoznacznego stanowiska, jednocześnie umożliwiając modelowi uczenie się na podstawie tych danych.
+W zbiorze dane oznaczone symbolem \texttt{?} występują w 248 rekordach, co stanowi 57\% wszystkich rekordów. Jest to znacząca ilość, która nie może zostać zignorowana i usunięta. Takie przypadki mogą wynikają z braku jednoznacznego stanowiska, dlatego w etapie przygotowania danych kodowane są jako neutralne 0. Taki sposób kodowania pozwala na zachowanie informacji, jednocześnie umożliwiając modelowi uczenie się na podstawie tych danych.
 
-Przykładowe rekordy ze zbioru wejściowego (wraz z wystąpieniami znaku \texttt{?}) przedstawiono na listingu \ref{lst:house_votes_missing}.
+Przykładowe rekordy ze zbioru wejściowego przedstawiono na listingu \ref{lst:house_votes_missing}.
 
-% \lstinputlisting[
-% inputencoding=utf8/cp1250,
-% firstline=1,
-% lastline=12,
-% breaklines=true,
-% numbers=left,
-% frame=single,
-% float,
-% caption={Przykładowe rekordy z pliku \texttt{house-votes-84.data}},
-% label={lst:house_votes_missing}
-% ]{house-votes-84.data}
-\textit{[Listing \texttt{house-votes-84.data} tymczasowo wyłączony dla szybszej kompilacji.]}
-\label{lst:house_votes_missing}
+\begin{samepage}
+\begin{center}
+\begin{minipage}{\linewidth}
+\lstinputlisting[
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=12,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Przykładowe rekordy ze zbioru wejściowego z brakującymi danymi},
+label={lst:house_votes_missing}
+] {house-votes-84.data}
+\end{minipage}
+\end{center}
+\end{samepage}
 
 \subsection{Przygotowanie danych}
 W ramach przygotowania danych zastosowano stały schemat, w którym głosy na tak (y) zamieniono na wartość 1, głosy przeciwne (n) na -1, natomiast wszelkie braki, wstrzymania się lub nieobecności oznaczone jako ? zamieniono na neutralną wartość 0.
@@ -83,30 +86,35 @@ Równocześnie przekształcono etykietę klasy, przypisując demokratom identyfi
 
 Implementację transformacji danych przedstawiono na listingu \ref{lst:transformacja_py}.
 
-% \lstinputlisting[
-% language=Python,
-% inputencoding=utf8/cp1250,
-% firstline=1,
-% lastline=80,
-% breaklines=true,
-% numbers=left,
-% frame=single,
-% float,
-% caption={Skrypt przygotowania danych \texttt{transformacja.py}},
-% label={lst:transformacja_py}
-% ]{transformacja.py}
-\textit{[Listing \texttt{transformacja.py} tymczasowo wyłączony dla szybszej kompilacji.]}
+
+\lstinputlisting[
+language=Python,
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=80,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Skrypt przygotowania danych do formatu \texttt{CSV}},
+label={lst:transformacja_py}
+] {transformacja.py}
 \label{lst:transformacja_py}
 
+Przykładowe rekordy po transformacji przedstawiono na listingu \ref{lst:transformed_votes_sample}.
 
-Po wykonaniu transformacji, dane zostały zapisane do nowego pliku \texttt{transformed\_votes.csv}, który zawiera już zakodowane wartości głosowań oraz etykiety klas.
-Te dane są już gotowe do wykorzystania w procesie trenowania sieci neuronowej.
+\lstinputlisting[
+inputencoding=utf8/cp1250,
+firstline=1,
+lastline=12,
+breaklines=true,
+numbers=left,
+frame=single,
+caption={Przykładowe rekordy po transformacji},
+label={lst:transformed_votes_sample}
+] {transformed_votes.csv}
+\label{lst:transformed_votes_sample}
 
-Na końcu etapu przygotowania danych wykonano dodatkową konwersję pliku \texttt{CSV} do formatu \texttt{Hickle} (\texttt{.hkl}) przy pomocy skryptu \texttt{hkl.py}. Celem tej operacji było przyspieszenie i uproszczenie dalszego wczytywania danych w programie uczącym: zamiast każdorazowo parsować plik tekstowy \texttt{CSV}, aplikacja ładuje bezpośrednio gotowe tablice \texttt{NumPy} z pliku binarnego \texttt{kongres.hkl}.
-
-Skrypt zapisuje dane w postaci listy: \texttt{[x, y\_t, x\_norm, x\_n\_s, y\_t\_s]}. W tym projekcie przyjęto \texttt{x\_norm = x}, a część oznaczona jako zbiór testowy w pliku \texttt{.hkl} jest taka sama jak zbiór pełny (\texttt{x\_n\_s = x\_norm}, \texttt{y\_t\_s = y\_t}). Oznacza to, że nie wykonano tu stałego podziału typu train/test podczas zapisu do \texttt{.hkl}; właściwy podział realizowany jest później dynamicznie w trakcie walidacji krzyżowej \texttt{StratifiedKFold}.
-
-Implementację konwersji do formatu \texttt{Hickle} przedstawiono na listingu \ref{lst:hkl_py}.
+Na końcu etapu przygotowania danych wykonano dodatkową konwersję pliku \texttt{CSV} do formatu \texttt{Hickle} (\texttt{.hkl}) przy pomocy skryptu \ref{lst:hkl_py}. Celem tej operacji było przyspieszenie i uproszczenie dalszego wczytywania danych w programie uczącym: zamiast każdorazowo parsować plik tekstowy \texttt{CSV}, aplikacja ładuje bezpośrednio gotowe tablice \texttt{NumPy} z pliku binarnego.
 
 \lstinputlisting[
 language=Python,
@@ -116,26 +124,11 @@ lastline=40,
 breaklines=true,
 numbers=left,
 frame=single,
-float,
-caption={Skrypt konwersji \texttt{transformed\_votes.csv} do \texttt{kongres.hkl} (\texttt{hkl.py})},
+caption={Skrypt konwersji z formatu \texttt{CSV} do \texttt{Hickle} \texttt{.hkl}},
 label={lst:hkl_py}
 ]{hkl.py}
 
-Przykładowe rekordy po transformacji przedstawiono na listingu \ref{lst:transformed_votes_sample}.
-
-% \lstinputlisting[
-% inputencoding=utf8/cp1250,
-% firstline=1,
-% lastline=12,
-% breaklines=true,
-% numbers=left,
-% frame=single,
-% float,
-% caption={Przykładowe rekordy z pliku \texttt{transformed\_votes.csv}},
-% label={lst:transformed_votes_sample}
-% ]{transformed_votes.csv}
-\textit{[Listing \texttt{transformed\_votes.csv} tymczasowo wyłączony dla szybszej kompilacji.]}
-\label{lst:transformed_votes_sample}
+Skrypt zapisuje dane w postaci listy: \texttt{[x, y\_t, x\_norm, x\_n\_s, y\_t\_s]}. W tym projekcie przyjęto \texttt{x\_norm = x}, a część oznaczona jako zbiór testowy w pliku \texttt{.hkl} jest taka sama jak zbiór pełny (\texttt{x\_n\_s = x\_norm}, \texttt{y\_t\_s = y\_t}). Oznacza to, że nie wykonano tu stałego podziału typu train/test podczas zapisu do \texttt{.hkl}; właściwy podział realizowany jest później dynamicznie w trakcie walidacji krzyżowej \texttt{StratifiedKFold}.
 
 \subsection{Wizualizacja danych}
 W celu lepszego zrozumienia rozkładu głosowań w zbiorze danych, przeprowadzono wizualizację procentowego udziału głosów wewnątrz każdej partii dla poszczególnych kwestii. Wykresy te pozwalają na szybkie zidentyfikowanie, które kwestie były bardziej kontrowersyjne i jak różniły się stanowiska demokratów i republikanów.
@@ -264,7 +257,7 @@ Na rysunku \ref{fig:model_perceptron_rosenblatt} przedstawiono schemat neuronu (
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.8\textwidth]{figures/perceptron.png}
-\caption{Schemat sztucznego neuronu (perceptronu) z wagami i wyjściem \cite{zajdelLab}}
+\caption{Schemat sztucznego neuronu \cite{zajdelLab}}
 \label{fig:model_perceptron_rosenblatt}
 \end{figure}
 
@@ -275,11 +268,11 @@ Pobudzenie neuronu (suma ważona z uwzględnieniem wyrazu wolnego) można zapisa
 z = \sum_{j=1}^{L} w_j x_j + b.
 \end{equation}
 
-\subsubsection*{Znaczenie symboli}
+\subsubsection*{Gdzie:}
 \begin{itemize}[label={\textbullet}]
 \item $x_j$ -- $j$-ty sygnał wejściowy (atrybut)
 \item $w_j$ -- waga odpowiadająca sygnałowi $x_j$
-\item $b$ -- wyraz wolny (bias), przesunięcie
+\item $b$ -- wyraz wolny (bias)
 \item $z$ -- pobudzenie neuronu (suma ważona z biasem)
 \item $L$ -- liczba sygnałów wejściowych
 \end{itemize}
@@ -290,7 +283,7 @@ W warstwach ukrytych zastosowano funkcję tangens hiperboliczny ($\tanh$):
 h = \tanh(z).
 \end{equation}
 
-Dane wejściowe mają wartości z przedziału $\{-1,0,1\}$, czyli są centrowane wokół zera i nie wymagają dodatkowej normalizacji. To dobrze współgra z funkcją $\tanh$, która zwraca wartości z zakresu $(-1,1)$ i dobrze pracuje dla sygnałów symetrycznych względem zera.
+Dane wejściowe mają wartości z przedziału $\{-1,0,1\}$, czyli są centrowane wokół zera i nie wymagają dodatkowej normalizacji. To dobrze współgra z funkcją $\tanh$, która zwraca wartości z zakresu $(-1,1)$ i dobrze się sprawdza dla sygnałów symetrycznych względem zera.
 
 W warstwie wyjściowej zastosowano funkcję \texttt{tanh}:
 \begin{equation}
@@ -299,12 +292,6 @@ W warstwie wyjściowej zastosowano funkcję \texttt{tanh}:
 
 Taki wybór jest naturalny dla zadania binarnego, ponieważ etykiety klas mają postać $-1$ i $1$. Wyjście funkcji \texttt{tanh} można interpretować jako wynik dodatni lub ujemny, co bezpośrednio wspiera decyzję klasową przez znak wyjścia.
 
-Podsumowanie struktury modelu:
-\begin{itemize}[label={\textbullet}]
-\item Wejście: $\mathbf{X}=[x_1,x_2,\dots,x_{16}]$, gdzie $x_i \in \{-1,0,1\}$
-\item Warstwy ukryte: aktywacja $\tanh$
-\item Warstwa wyjściowa: aktywacja $	anh$ (dla klas $-1/1$)
-\end{itemize}
 
 
 \subsection{Sieci jednokierunkowe jednowarstwowe}
