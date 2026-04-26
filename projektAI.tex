@@ -583,20 +583,10 @@ W praktyce czesto przyjmuje sie $m_c\approx 0{,}9$--$0{,}95$, co zwykle zwieksza
 
 \section{Implementacja sieci neuronowej}
 
-Implementację modelu wydzielono do osobnego modułu \texttt{mlp\_core.py}. Taki podział upraszcza prowadzenie eksperymentów: skrypty badawcze (np. strojenie architektury i parametrów uczenia) korzystają z jednej, wspólnej klasy sieci i przekazują do niej jedynie zestaw hiperparametrów.
+Implementację modelu wydzielono do osobnego modułu. Taki podział upraszcza prowadzenie eksperymentów. Jest to baza, która umożliwia utworzenie różnych wersji sieci bez powielania kodu odpowiedzialnego za sam algorytm uczenia.
 
-\subsection{Struktura modułu \texttt{mlp\_core.py}}
-W pliku \texttt{mlp\_core.py} znajduje się klasa \texttt{mlp\_m\_3w}, która implementuje sieć \texttt{MLP} z dwiema warstwami ukrytymi i jedną warstwą wyjściową. Moduł realizuje:
-\begin{itemize}[label={\textbullet}]
-\item inicjalizację wag i biasów dla warstw \texttt{L-K1-K2-K3},
-\item propagację sygnału w przód (\texttt{predict}),
-\item uczenie metodą wstecznej propagacji błędu z momentum (\texttt{train}),
-\item ocenę jakości przez walidację krzyżową \texttt{StratifiedKFold} (\texttt{train\_CV}).
-\end{itemize}
-
-W implementacji wykorzystano funkcje pomocnicze z modułu \texttt{nnet\_jit4.py}: \texttt{tansig}, \texttt{deltatan\_out}, \texttt{deltatan}, \texttt{learnbp} oraz \texttt{sumsqr}.
-
-Pełny kod modułu przedstawiono na listingu \ref{lst:mlp_core_py}.
+\subsection{Klasa implementująca sieć MLP}
+Głównym komponentem odpowiedzialnym za architekturę i logikę sieci neuronowej jest moduł opisany listingiem \ref{lst:mlp_core_py}, w którym zdefiniowano klasę implementującą sieć MLP. Zawiera ona strukturę wielowarstwowego perceptronu składającą się z dwóch warstw ukrytych oraz jednej warstwy wyjściowej. Moduł ten zapewnia środowisko do pracy z modelem, obejmujące procesy inicjalizacji wag i biasów oraz algorytmy uczenia oparte na wstecznej propagacji błędu z mechanizmem momentum. Całość implementacji została zoptymalizowana pod kątem obliczeniowym poprzez wykorzystanie zewnętrznych funkcji pomocniczych, które wspierają operacje matematyczne i aktualizację parametrów sieci.
 
 \lstinputlisting[
 language=Python,
@@ -606,39 +596,24 @@ lastline=220,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Implementacja klasy \texttt{mlp\_m\_3w} w pliku \texttt{mlp\_core.py}},
+caption={Implementacja klasy sieci MLP},
 label={lst:mlp_core_py}
 ]{mlp_core.py}
 
-\subsection{Opis działania kodu \texttt{mlp\_core.py}}
-Najważniejsze elementy implementacji z listingu \ref{lst:mlp_core_py} działają następująco:
-\begin{itemize}[label={\textbullet}]
-\item \texttt{\_\_init\_\_}: ustawia rozmiary sieci i hiperparametry (\texttt{K1}, \texttt{K2}, \texttt{lr}, \texttt{mc}, \texttt{max\_epoch}), inicjalizuje wagi oraz zapisuje je do pliku \texttt{wagi3w.hkl} albo odczytuje wcześniej zapisane.
-\item \texttt{predict}: realizuje propagację w przód. Dwie warstwy ukryte używają funkcji aktywacji \texttt{tansig}, a wyjście ma aktywację \texttt{tansig} (\texttt{tanh}). Wynikiem jest wektor odpowiedzi sieci \texttt{y3} o wartościach z zakresu $(-1,1)$.
-\item \texttt{train}: wykonuje pętlę uczenia epoka po epoce. W każdej epoce obliczany jest błąd \texttt{e}, wartość \texttt{SSE} i skuteczność klasyfikacji \texttt{PK}. Następnie liczony jest gradient metodą backpropagation i aktualizowane są wagi oraz biasy z członem momentum.
-\item \texttt{train\_CV}: dzieli dane na \texttt{CV} foldów ze stratyfikacją klas i dla każdego podziału wykonuje uczenie oraz test. Na końcu zwracana jest średnia skuteczność \texttt{PK} ze wszystkich foldów.
-\item Blok \texttt{if \_\_name\_\_ == '\_\_main\_\_'}: umożliwia szybki test modułu bez uruchamiania pełnego eksperymentu, łącznie z wykresem przebiegu \texttt{SSE} i podglądem predykcji dla pierwszych próbek.
-\end{itemize}
+\subsection{Opis działania kodu}
+Fundamentem działania klasy jest proces inicjalizacji realizowany w metodzie \texttt{\_\_init\_\_}. Konfiguruje ona kluczowe hiperparametry sieci, takie jak rozmiary warstw ukrytych ($K_1$, $K_2$), współczynnik uczenia (\textit{learning rate}) oraz współczynnik momentum. 
 
-Z punktu widzenia praktycznego, taki podział na moduł rdzeniowy i osobne skrypty eksperymentalne pozwala łatwo porównywać różne konfiguracje bez powielania kodu odpowiedzialnego za sam algorytm uczenia.
+Istotnym aspektem jest tutaj mechanizm zarządzania wagami. System pozwala na ich losową inicjalizację lub odczytanie uprzednio wytrenowanych wartości, co zapewnia powtarzalność eksperymentów. Za proces wnioskowania odpowiada metoda \texttt{predict}, która realizuje pełną propagację sygnału w przód. W architekturze tej zarówno obie warstwy ukryte, jak i warstwa wyjściowa, wykorzystują funkcję aktywacji \texttt{tansig} (tangens hiperboliczny). Dzięki temu sieć generuje wektor odpowiedzi $y_3$ o wartościach znormalizowanych w przedziale $(-1, 1)$. 
 
-\subsection{Rola modułu \texttt{nnet\_jit4.py}}
-W projekcie kluczową rolę pełni również plik \texttt{nnet\_jit4.py}, który jest biblioteką
-niskopoziomowych funkcji obliczeniowych używanych przez klasę \texttt{mlp\_m\_3w}.
-Najprościej można go traktować jako "silnik numeryczny" dla sieci neuronowej:
-zamiast implementować wszystkie operacje matematyczne bezpośrednio w klasie modelu,
-wydzielono je do jednego modułu narzędziowego.
+Właściwy proces optymalizacji parametrów odbywa się w metodzie \texttt{train}. Działa ona iteracyjnie, gdzie w każdej epoce obliczany jest błąd $e$, suma kwadratów błędów (SSE) oraz skuteczność klasyfikacji (PK). Na podstawie tych danych wyznaczany jest gradient błędu metodą wstecznej propagacji, a następnie dokonywana jest aktualizacja wag i biasów. 
 
-Taki podział ma kilka zalet:
-\begin{itemize}[label={\textbullet}]
-\item upraszcza kod głównej klasy sieci (\texttt{mlp\_core.py}),
-\item ułatwia testowanie i modyfikację pojedynczych elementów algorytmu,
-\item pozwala przyspieszyć obliczenia dzięki dekoratorowi \texttt{@njit} z biblioteki \texttt{Numba}.
-\end{itemize}
+\subsection{Walidacja krzyżowa}
+W celu obiektywnej oceny zdolności generalizacyjnych modelu zaimplementowano metodę \texttt{train\_CV}. Wykorzystuje ona strategię warstwowej walidacji krzyżowej (\textit{StratifiedKFold}), dzieląc zbiór danych na określoną liczbę podzbiorów (foldów) z zachowaniem proporcji klas. 
 
-W praktyce oznacza to, że \texttt{mlp\_core.py} odpowiada za logikę uczenia i organizację pętli,
-natomiast \texttt{nnet\_jit4.py} odpowiada za szybkie obliczenia: inicjalizację wag,
-propagację aktywacji, obliczanie gradientów i krok aktualizacji parametrów.
+\subsection{Moduł obliczeniowy}
+W projekcie kluczową rolę pełni moduł obliczeniowy, który jest biblioteką
+niskopoziomowych funkcji obliczeniowych używanych przez klasę implementacji MLP.
+Moduł zawiera funkcje do inicjalizacji wag, propagacji sygnału, obliczania błędów i aktualizacji parametrów. Dzięki temu kod klasy MLP pozostaje przejrzysty i skupiony na logice eksperymentu, podczas gdy złożone operacje matematyczne są realizowane przez zoptymalizowane funkcje w module obliczeniowym.
 
 Pełny kod modułu przedstawiono na listingu \ref{lst:nnet_jit4_py}.
 
@@ -650,52 +625,50 @@ lastline=220,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Modu{\l} funkcji numerycznych sieci neuronowej \texttt{nnet\_jit4.py}},
+caption={Modu{\l} obliczeń matematycznych},
 label={lst:nnet_jit4_py}
 ]{nnet_jit4.py}
 
-\subsection{Co dokładnie wykorzystujemy z \texttt{nnet\_jit4.py}}
-W aktualnej implementacji modelu (\texttt{mlp\_core.py}) używane są następujące funkcje
-z listingu \ref{lst:nnet_jit4_py}:
+W modelu klasy MLP wykorzystywane są następujące funkcje:
 
 \begin{itemize}[label={\textbullet}]
-\item \texttt{nwtan(s, p)}
+\item \texttt{nwtan(s, p)}:
 Inicjalizacja wag i biasów dla warstw ukrytych z aktywacją \texttt{tansig}.
 Funkcja tworzy rozkład startowych wag o skali dopasowanej do liczby wejść i neuronów,
 co poprawia stabilność pierwszych epok uczenia.
 
-\item \texttt{rands(a, b)}
+\item \texttt{rands(a, b)}:
 Losowa inicjalizacja warstwy wyjściowej (wagi i biasy).
 W tym projekcie warstwa wyjściowa jest liniowa, dlatego do startu wystarcza
 prosta inicjalizacja losowa z zakresu \texttt{[-1, 1]}.
 
-\item \texttt{tansig(n, b)}
+\item \texttt{tansig(n, b)}:
 Funkcja aktywacji \texttt{tanh}-sigmoid dla obu warstw ukrytych.
 Przekształca pobudzenie neuronu do zakresu \texttt{(-1, 1)}, co pasuje
 do kodowania wejść \texttt{-1/0/1} i dobrze współpracuje z backpropagation.
 
-\item \texttt{tansig(n, b)}
+\item \texttt{tansig(n, b)}:
 Aktywacja \texttt{tanh} warstwy wyjściowej.
 Model zwraca wartość z zakresu \texttt{(-1, 1)}, która jest interpretowana przez znak jako decyzja klasowa.
 
-\item \texttt{sumsqr(a)}
+\item \texttt{sumsqr(a)}:
 Oblicza sumę kwadratów błędów \texttt{SSE}:
 \begin{equation}
 SSE = \sum_{q=1}^{Q} e_q^2.
 \end{equation}
 Ta miara jest monitorowana podczas uczenia i używana do oceny zbieżności.
 
-\item \texttt{deltatan\_out(a, d)}
+\item \texttt{deltatan\_out(a, d)}:
 Wyznacza sygnał błędu (delta) dla warstwy wyjściowej z aktywacją \texttt{tansig}.
 W tym przypadku używana jest pochodna $1-a^2$,
 dlatego delta jest skalowana lokalnym nachyleniem funkcji aktywacji.
 
-\item \texttt{deltatan(a, d, w)}
+\item \texttt{deltatan(a, d, w)}:
 Wyznacza delty dla warstw ukrytych z aktywacją \texttt{tansig},
 uwzględniając pochodną $1-a^2$ oraz propagację błędu przez macierze wag
 z warstwy następnej.
 
-\item \texttt{learnbp(p, d, lr)}
+\item \texttt{learnbp(p, d, lr)}:
 Oblicza gradientowy krok aktualizacji wag i biasów:
 \begin{equation}
 \Delta \mathbf{W} = \eta\, \delta\, \mathbf{p}^T,
@@ -705,32 +678,12 @@ Oblicza gradientowy krok aktualizacji wag i biasów:
 Wartości te są następnie łączone w \texttt{mlp\_core.py} z członem momentum.
 \end{itemize}
 
-\subsection{Funkcje obecne w module, ale nieużywane w tej wersji projektu}
-W module znajdują się także funkcje ogólnego przeznaczenia:
-\texttt{logsig}, \texttt{deltalog}, \texttt{nwlog}, \texttt{normRows}, \texttt{randX}, \texttt{randn}.
-Nie są one wywoływane bezpośrednio w obecnej konfiguracji klasyfikatora,
-ale pozostają dostępne do przyszłych wariantów modelu,
-np. z logistyczną aktywacją warstw lub inną strategią inicjalizacji.
-
-\subsection{Dlaczego ten moduł jest ważny dla całego projektu}
-Bez modułu \texttt{nnet\_jit4.py} kod implementacji sieci byłby znacznie dłuższy,
-trudniejszy w utrzymaniu i wolniejszy obliczeniowo. Rozdzielenie warstwy
-"logiki eksperymentu" (skrypty \texttt{exp*.py}), warstwy "logiki modelu"
-(\texttt{mlp\_core.py}) oraz warstwy "obliczeń numerycznych" (\texttt{nnet\_jit4.py})
-tworzy czytelną i skalowalną strukturę projektu.
-
-W kontekście przeprowadzonych eksperymentów oznacza to, że wszystkie testy
-architektury, hiperparametrów, ważności cech i przeuczenia korzystają
-z tego samego, spójnego zestawu funkcji numerycznych. Dzięki temu wyniki
-poszczególnych eksperymentów są porównywalne i nie zależą od różnic
-w implementacji podstawowych operacji sieciowych.
-
 
 
 \section{Eksperymenty}
 
 W rozdziale eksperymentalnym przeprowadzono serię badań mających na celu dobór konfiguracji sieci MLP
-tak, aby uzyskać możliwie wysoką skuteczność klasyfikacji partii politycznej na podstawie wektora głosowań.
+tak, aby otrzymać możliwie wysoką skuteczność klasyfikacji partii politycznej.
 Każdy eksperyment testuje inny aspekt modelu: architekturę sieci, parametry uczenia oraz wpływ danych
 na stabilność i jakość predykcji. Jako główną miarę porównawczą przyjęto skuteczność klasyfikacji
 \texttt{PK [\%]} obliczaną w walidacji krzyżowej.
