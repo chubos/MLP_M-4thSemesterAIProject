@@ -72,6 +72,7 @@ Przykładowe rekordy ze zbioru wejściowego przedstawiono na listingu \ref{lst:h
 \begin{samepage}
 \begin{center}
 \begin{minipage}{\linewidth}
+\iffalse
 \lstinputlisting[
 inputencoding=utf8/cp1250,
 firstline=1,
@@ -79,9 +80,10 @@ lastline=12,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Przykładowe rekordy ze zbioru wejściowego z brakującymi danymi},
+caption={Przyk{\l}adowe rekordy ze zbioru wej\'sciowego z brakuj\k{a}cymi danymi},
 label={lst:house_votes_missing}
 ] {house-votes-84.data}
+\fi
 \end{minipage}
 \end{center}
 \end{samepage}
@@ -94,6 +96,7 @@ Równocześnie przekształcono etykietę klasy, przypisując demokratom identyfi
 Implementację transformacji danych przedstawiono na listingu \ref{lst:transformacja_py}.
 
 
+\iffalse
 \lstinputlisting[
 language=Python,
 inputencoding=utf8/cp1250,
@@ -105,10 +108,11 @@ frame=single,
 caption={Skrypt przygotowania danych do formatu \texttt{CSV}},
 label={lst:transformacja_py}
 ] {transformacja.py}
-\label{lst:transformacja_py}
+\fi
 
 Przykładowe rekordy po transformacji przedstawiono na listingu \ref{lst:transformed_votes_sample}.
 
+\iffalse
 \lstinputlisting[
 inputencoding=utf8/cp1250,
 firstline=1,
@@ -116,13 +120,14 @@ lastline=12,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Przykładowe rekordy po transformacji},
+caption={Przyk{\l}adowe rekordy po transformacji},
 label={lst:transformed_votes_sample}
 ] {transformed_votes.csv}
-\label{lst:transformed_votes_sample}
+\fi
 
-Na końcu etapu przygotowania danych wykonano dodatkową konwersję pliku \texttt{CSV} do formatu \texttt{Hickle} (\texttt{.hkl}) przy pomocy skryptu \ref{lst:hkl_py}. Celem tej operacji było przyspieszenie i uproszczenie dalszego wczytywania danych w programie uczącym: zamiast każdorazowo parsować plik tekstowy \texttt{CSV}, aplikacja ładuje bezpośrednio gotowe tablice \texttt{NumPy} z pliku binarnego.
+Na końcu etapu przygotowania danych wykonano dodatkową konwersję pliku \texttt{CSV} do formatu \texttt{Hickle} przy pomocy skryptu \ref{lst:hkl_py}. Celem tej operacji było przyspieszenie i uproszczenie dalszego wczytywania danych w programie uczącym: zamiast każdorazowo parsować plik tekstowy \texttt{CSV}, aplikacja ładuje bezpośrednio gotowe tablice \texttt{NumPy} z pliku binarnego.
 
+\iffalse
 \lstinputlisting[
 language=Python,
 inputencoding=utf8/cp1250,
@@ -134,8 +139,9 @@ frame=single,
 caption={Skrypt konwersji z formatu \texttt{CSV} do \texttt{Hickle} \texttt{.hkl}},
 label={lst:hkl_py}
 ]{hkl.py}
+\fi
 
-Skrypt zapisuje dane w postaci listy: \texttt{[x, y\_t, x\_norm, x\_n\_s, y\_t\_s]}. W tym projekcie przyjęto \texttt{x\_norm = x}, a część oznaczona jako zbiór testowy w pliku \texttt{.hkl} jest taka sama jak zbiór pełny (\texttt{x\_n\_s = x\_norm}, \texttt{y\_t\_s = y\_t}). Oznacza to, że nie wykonano tu stałego podziału typu train/test podczas zapisu do \texttt{.hkl}; właściwy podział realizowany jest później dynamicznie w trakcie walidacji krzyżowej \texttt{StratifiedKFold}.
+Skrypt zapisuje dane w postaci listy: \texttt{[x, y\_t, x\_norm, x\_n\_s, y\_t\_s]}. W tym projekcie przyjęto \texttt{x\_norm = x}, a część oznaczona jako zbiór testowy w pliku \texttt{.hkl} jest taka sama jak zbiór pełny (\texttt{x\_n\_s = x\_norm}, \texttt{y\_t\_s = y\_t}). Nie wykonano tu stałego podziału typu train/test, ponieważ właściwy podział realizowany jest później dynamicznie w trakcie walidacji krzyżowej \texttt{StratifiedKFold}.
 
 \subsection{Wizualizacja danych}
 W celu lepszego zrozumienia rozkładu głosowań w zbiorze danych, przeprowadzono wizualizację procentowego udziału głosów wewnątrz każdej partii dla poszczególnych kwestii. Wykresy te pozwalają na szybkie zidentyfikowanie, które kwestie były bardziej kontrowersyjne i jak różniły się stanowiska demokratów i republikanów.
@@ -257,7 +263,7 @@ W celu lepszego zrozumienia rozkładu głosowań w zbiorze danych, przeprowadzon
 
 \subsection{Model neuronu}
 
-Początki formalnego opisu neuronu w kontekście obliczeń wiążą się z pracą Warrena S. McCullocha i Waltera Pittsa z 1943 roku. McCulloch był neurofizjologiem, natomiast Pitts matematykiem, co przełożyło się na próbę połączenia wiedzy o biologicznym neuronie z precyzyjnym zapisem matematycznym \cite{geronML}. W najprostszym ujęciu sztuczny neuron można traktować jako element przetwarzający sygnały wejściowe, który waży je, sumuje i na tej podstawie wytwarza sygnał wyjściowy.
+Początki formalnego opisu neuronu w kontekście obliczeń wiążą się z pracą Warrena S. McCullocha i Waltera Pittsa z 1943 roku. McCulloch z zawodu był neurofizjologiem, a Pitts matematykiem, co przełożyło się na próbę połączenia wiedzy o biologicznym neuronie z precyzyjnym zapisem matematycznym \cite{geronML}. W najprostszym ujęciu sztuczny neuron można traktować jako element przetwarzający sygnały wejściowe, który waży je, sumuje i na tej podstawie wytwarza sygnał wyjściowy.
 
 Na rysunku \ref{fig:model_perceptron_rosenblatt} przedstawiono schemat neuronu (perceptronu) z wejściami $x_1,\dots,x_L$ oraz odpowiadającymi im wagami $w_1,\dots,w_L$. Wagi opisują wpływ danego sygnału wejściowego na wynik neuronu: dodatnie wzmacniają wkład wejścia, a ujemne go osłabiają. Dodatkowo uwzględnia się wyraz wolny (bias) $b$, który pozwala przesunąć punkt równowagi sumy ważonej. Sygnał wyjściowy neuronu uzyskuje się, stosując funkcję aktywacji do pobudzenia.
 
@@ -270,7 +276,7 @@ Na rysunku \ref{fig:model_perceptron_rosenblatt} przedstawiono schemat neuronu (
 
 \subsection{Opis matematyczny sztucznego neuronu}
 
-Pobudzenie neuronu (suma ważona z uwzględnieniem wyrazu wolnego) można zapisać jako:
+Pobudzenie neuronu można zapisać jako:
 \begin{equation}
 z = \sum_{j=1}^{L} w_j x_j + b.
 \end{equation}
@@ -292,18 +298,25 @@ h = \tanh(z).
 
 Dane wejściowe mają wartości z przedziału $\{-1,0,1\}$, czyli są centrowane wokół zera i nie wymagają dodatkowej normalizacji. To dobrze współgra z funkcją $\tanh$, która zwraca wartości z zakresu $(-1,1)$ i dobrze się sprawdza dla sygnałów symetrycznych względem zera.
 
-W warstwie wyjściowej zastosowano funkcję \texttt{tanh}:
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.7\textwidth]{\detokenize{figures/tanh.png}}
+\caption{Wykres funkcji aktywacji $\tanh$}
+\label{fig:tanh_activation}
+\end{figure}
+
+W warstwie wyjściowej zastosowano funkcję $\tanh$:
 \begin{equation}
-\hat{y} = \tanh(z).
+y = \tanh(z).
 \end{equation}
 
-Taki wybór jest naturalny dla zadania binarnego, ponieważ etykiety klas mają postać $-1$ i $1$. Wyjście funkcji \texttt{tanh} można interpretować jako wynik dodatni lub ujemny, co bezpośrednio wspiera decyzję klasową przez znak wyjścia.
+Taki wybór jest naturalny dla zadania binarnego, ponieważ etykiety klas mają postać $-1$ i $1$. Wyjście funkcji $\tanh$ można interpretować jako wynik dodatni lub ujemny, co bezpośrednio wspiera decyzję klasową przez znak wyjścia.
 
 
 
 \subsection{Sieci jednokierunkowe jednowarstwowe}
 
-Sieć jednowarstwowa (bez warstw ukrytych) składa się z warstwy wejściowej i jednej warstwy obliczeniowej. Dla $L$ sygnałów wejściowych oraz $K$ neuronów wyjściowych można zapisać:
+W sieci jednowarstwowej neuronu ułożone są w jednej warstwie, a przepływ sygnału zachodzi od wejścia do wyjścia. Dla $L$ sygnałów wejściowych oraz $K$ neuronów wyjściowych można zapisać:
 \begin{equation}
 z_i = \sum_{j=1}^{L} w_{ij}x_j + b_i, \qquad i=1,\dots,K,
 \end{equation}
@@ -319,29 +332,67 @@ W zapisie macierzowym:
 \mathbf{y} = f(\mathbf{z}) = f(\mathbf{W}\mathbf{x}+\mathbf{b}).
 \end{equation}
 
-Dla uczenia nadzorowanego (próbka ucząca $n$, wektor docelowy $\mathbf{d}^{(n)}$) funkcję celu SSE można zapisać jako:
+Uczenie pod nadzorem zakłada, że każdemu wektorowi wejściowemu $\mathbf{x}$ odpowiada pożądany wektor sygnałów wyjściowych $\hat{\mathbf{y}}$:
 \begin{equation}
-E = \frac{1}{2}\sum_{n=1}^{N}\sum_{i=1}^{K}\left(y_i^{(n)}-d_i^{(n)}\right)^2.
+\mathbf{x} = [x_1,x_2,\dots,x_L]^T,
+\qquad
+\hat{\mathbf{y}} = [\hat{y}_1,\hat{y}_2,\dots,\hat{y}_K]^T.
+\end{equation}
+Para $\mathbf{x},\hat{\mathbf{y}}$ stanowi więc jedną próbkę uczącą, na podstawie której sieć koryguje swoje parametry. Jeżeli sieć nie jest jeszcze nauczona, jej odpowiedź $\mathbf{y}$ różni się od wartości oczekiwanej $\hat{\mathbf{y}}$, co prowadzi do powstania błędu:
+\begin{equation}
+\mathbf{e} = \hat{\mathbf{y}} - \mathbf{y}.
 \end{equation}
 
-Gradient względem wag i przesunięć ma postać:
+Zadaniem procesu uczenia jest takie modyfikowanie wag i biasów, aby odpowiedź sieci $\mathbf{y}$ możliwie dobrze pokrywała się z odpowiedzią wzorcową $\hat{\mathbf{y}}$. Najczęściej sprowadza się to do minimalizacji funkcji celu, którą w tym przypadku przyjmuje się jako sumaryczny błąd kwadratowy $SSE$:
 \begin{equation}
-\frac{\partial E}{\partial w_{ij}} = \sum_{n=1}^{N} \delta_i^{(n)} x_j^{(n)},
-\qquad
-\frac{\partial E}{\partial b_i} = \sum_{n=1}^{N} \delta_i^{(n)},
-\end{equation}
-gdzie
-\begin{equation}
-\delta_i^{(n)} = \left(y_i^{(n)}-d_i^{(n)}\right) f_i'\!\left(z_i^{(n)}\right).
+E = SSE = \frac{1}{2}\sum_{i=1}^{K} e_i^2.
 \end{equation}
 
-Aktualizacja parametrów metodą największego spadku:
+W praktyce uczenie przebiega iteracyjnie. W kolejnych cyklach, często nazywanych epokami, wagi są korygowane tak, aby stopniowo zmniejszać wartość błędu. Dla pojedynczej $j$-tej wagi $i$-tego neuronu zmianę można zapisać jako zależność rekurencyjną:
 \begin{equation}
-w_{ij}^{(k+1)} = w_{ij}^{(k)} - \eta\frac{\partial E}{\partial w_{ij}},
-\qquad
-b_i^{(k+1)} = b_i^{(k)} - \eta\frac{\partial E}{\partial b_i},
+ w_{ij}(t+1) = w_{ij}(t) + \Delta w_{ij}(t),
 \end{equation}
-gdzie $\eta>0$ oznacza współczynnik uczenia \cite{zajdelLab}.
+gdzie $t$ oznacza numer cyklu uczenia. Sam przyrost wag wyznacza się metodą największego spadku, która prowadzi parametry w kierunku najszybszego zmniejszania błędu:
+\begin{equation}
+\Delta w_{ij} = -\eta \frac{\partial E}{\partial w_{ij}},
+\end{equation}
+gdzie $\eta>0$ jest współczynnikiem uczenia. Znak minus wynika z faktu, że gradient wskazuje kierunek najszybszego wzrostu funkcji celu, a w uczeniu dąży się do jej minimalizacji.
+
+Uwzględniając zależność błędu od wagi poprzez sygnał wyjściowy i pobudzenie neuronu, pochodną można rozpisać regułą łańcuchową:
+\begin{equation}
+\frac{\partial E}{\partial w_{ij}} = \frac{\partial E}{\partial y_i}\frac{\partial y_i}{\partial z_i}\frac{\partial z_i}{\partial w_{ij}}.
+\end{equation}
+
+Korzystając z definicji błędu, otrzymujemy:
+\begin{equation}
+\frac{\partial E}{\partial y_i} = y_i - \hat{y}_i.
+\end{equation}
+
+Z zależności neuronu
+\begin{equation}
+z_i = \sum_{j=1}^{L} w_{ij}x_j + b_i
+\end{equation}
+wynika:
+\begin{equation}
+\frac{\partial z_i}{\partial w_{ij}} = x_j.
+\end{equation}
+
+Po podstawieniu dostajemy ogólną regułę uczenia dla pojedynczej wagi:
+\begin{equation}
+\Delta w_{ij} = \eta\left(\hat{y}_i - y_i\right) f_i'\!\left(z_i\right) x_j.
+\end{equation}
+
+Jeżeli funkcja aktywacji ma postać tangensa hiperbolicznego, czyli $y_i = \tanh(z_i)$, to jej pochodna wynosi $f_i'(z_i)=1-y_i^2$. Wtedy reguła uczenia przyjmuje postać:
+\begin{equation}
+\Delta w_{ij} = \eta\left(\hat{y}_i - y_i\right)\left(1-y_i^2\right)x_j.
+\end{equation}
+
+Analogicznie można wyznaczyć poprawkę dla biasu:
+\begin{equation}
+\Delta b_i = \eta\left(\hat{y}_i - y_i\right)f_i'\!\left(z_i\right).
+\end{equation}
+
+W ten sposób kolejne epoki uczenia prowadzą do stopniowego zmniejszania błędu i dopasowywania odpowiedzi sieci do sygnałów wzorcowych \cite{zajdelLab}.
 
 
 
@@ -382,9 +433,9 @@ przy czym $\mathbf{y}^{(0)}=\mathbf{x}$ oraz dla pierwszej warstwy $K_0=L$.
 
 \subsection{Algorytm wstecznej propagacji błędu}
 
-Dla wyjścia trzeciej warstwy i sygnału zadanego $\mathbf{d}$ funkcję błędu SSE zapisujemy jako:
+Dla wyjścia trzeciej warstwy i sygnału zadanego $\hat{\mathbf{y}}^{(3)}$ funkcję błędu SSE zapisujemy jako:
 \begin{equation}
-E = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(y^{(3)}_{i_3}-d_{i_3}\right)^2.
+E = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)^2.
 \end{equation}
 
 Po podstawieniu kolejnych warstw (łańcuchowo) otrzymuje się rozwiniętą zależność:
@@ -395,7 +446,7 @@ f^{(2)}\!\left(\sum_{i_1=1}^{K_1} w_{i_2 i_1}^{(2)}
 f^{(1)}\!\left(\sum_{j=1}^{L} w_{i_1 j}^{(1)}x_j + b_{i_1}^{(1)}\right)
 + b_{i_2}^{(2)}\right)
 + b_{i_3}^{(3)}\right)
-- d_{i_3}
++ \hat{y}^{(3)}_{i_3}
 \right)^2.
 \end{equation}
 
@@ -405,7 +456,7 @@ W warstwie wyjściowej składnik gradientu względem wagi wyznacza się z reguł
 = \frac{\partial E}{\partial y^{(3)}_{i_3}}
 \frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}
 \frac{\partial z^{(3)}_{i_3}}{\partial w^{(3)}_{i_3 i_2}}
-= \left(y^{(3)}_{i_3}-d_{i_3}\right)
+= \left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)
 f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
 y^{(2)}_{i_2}.
 \end{equation}
@@ -421,7 +472,7 @@ Dla warstwy drugiej (ukrytej) dostajemy:
 \frac{\partial y^{(2)}_{i_2}}{\partial z^{(2)}_{i_2}}
 \frac{\partial z^{(2)}_{i_2}}{\partial w^{(2)}_{i_2 i_1}} \\
 &= \sum_{i_3=1}^{K_3}
-\left(y^{(3)}_{i_3}-d_{i_3}\right)
+\left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)
 f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
 w^{(3)}_{i_3 i_2}
 f'^{(2)}\!\left(z^{(2)}_{i_2}\right)
@@ -443,7 +494,7 @@ Dla pierwszej warstwy analogicznie:
 \frac{\partial y^{(1)}_{i_1}}{\partial z^{(1)}_{i_1}}
 \frac{\partial z^{(1)}_{i_1}}{\partial w^{(1)}_{i_1 j}} \\
 &= \sum_{i_3=1}^{K_3}
-\left(y^{(3)}_{i_3}-d_{i_3}\right)
+\left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)
 f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
 \sum_{i_2=1}^{K_2}
 w^{(3)}_{i_3 i_2}
@@ -456,7 +507,7 @@ x_j.
 
 Po wprowadzeniu oznaczen sygnalow bledu:
 \begin{equation}
-\delta^{(3)}_{i_3} = \left(y^{(3)}_{i_3}-d_{i_3}\right)f'^{(3)}\!\left(z^{(3)}_{i_3}\right),
+\delta^{(3)}_{i_3} = \left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)f'^{(3)}\!\left(z^{(3)}_{i_3}\right),
 \end{equation}
 \begin{equation}
 \delta^{(2)}_{i_2} = \left(\sum_{i_3=1}^{K_3} w^{(3)}_{i_3 i_2}\,\delta^{(3)}_{i_3}\right)f'^{(2)}\!\left(z^{(2)}_{i_2}\right),
@@ -466,11 +517,12 @@ Po wprowadzeniu oznaczen sygnalow bledu:
 \end{equation}
 otrzymuje sie rownowazne postacie skrocone:
 \begin{equation}
-\frac{\partial E}{\partial w^{(3)}_{i_3 i_2}} = \delta^{(3)}_{i_3}y^{(2)}_{i_2},
+\begin{aligned}
+\frac{\partial E}{\partial w^{(3)}_{i_3 i_2}} &= \delta^{(3)}_{i_3}y^{(2)}_{i_2},
 \qquad
-\frac{\partial E}{\partial w^{(2)}_{i_2 i_1}} = \delta^{(2)}_{i_2}y^{(1)}_{i_1},
-\qquad
-\frac{\partial E}{\partial w^{(1)}_{i_1 j}} = \delta^{(1)}_{i_1}x_j.
+\frac{\partial E}{\partial w^{(2)}_{i_2 i_1}} = \delta^{(2)}_{i_2}y^{(1)}_{i_1},\\
+\frac{\partial E}{\partial w^{(1)}_{i_1 j}} &= \delta^{(1)}_{i_1}x_j.
+\end{aligned}
 \end{equation}
 
 Gradienty wzgledem przesuniec wynikaja bezposrednio z reguly lancuchowej:
@@ -598,7 +650,7 @@ lastline=220,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Moduł funkcji numerycznych sieci neuronowej \texttt{nnet\_jit4.py}},
+caption={Modu{\l} funkcji numerycznych sieci neuronowej \texttt{nnet\_jit4.py}},
 label={lst:nnet_jit4_py}
 ]{nnet_jit4.py}
 
@@ -832,7 +884,7 @@ lastline=220,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Skrypt eksperymentu nr 3: analiza ważności głosowań (\texttt{exp3\_waznosc\_glosowan.py})},
+caption={Skrypt eksperymentu nr 3: analiza wa\.zno\'sci g{\l}osowa\'n (\texttt{exp3\_waznosc\_glosowan.py})},
 label={lst:exp3_waznosc_glosowan_py}
 ]{exp3_waznosc_glosowan.py}
 
@@ -890,7 +942,7 @@ lastline=220,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Skrypt eksperymentu nr 4: wpływ liczby danych uczących (\texttt{exp4\_ilosc\_danych.py})},
+caption={Skrypt eksperymentu nr 4: wp{\l}yw liczby danych ucz\k{a}cych (\texttt{exp4\_ilosc\_danych.py})},
 label={lst:exp4_ilosc_danych_py}
 ]{exp4_ilosc_danych.py}
 
