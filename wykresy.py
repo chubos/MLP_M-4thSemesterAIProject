@@ -29,6 +29,40 @@ except Exception as e:
     print(f"Błąd podczas wczytywania pliku: {e}")
     exit()
 
+# Wykres rozkładu klas (Demokraci vs Republikanie)
+try:
+    party_order = ['democrat', 'republican']
+    party_counts = df['partia'].value_counts().reindex(party_order).fillna(0).astype(int)
+    party_pct = (party_counts / party_counts.sum()) * 100
+
+    plt.figure(figsize=(5, 4.5))
+    bars = plt.bar(
+        ['Demokraci', 'Republikanie'],
+        party_pct.values,
+        width=0.45,
+        color=['#00008B', '#8B0000'],
+        edgecolor='black'
+    )
+
+    for bar, pct, cnt in zip(bars, party_pct.values, party_counts.values):
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 1.0,
+            f"{pct:.1f}%\n(n={cnt})",
+            ha='center',
+            va='bottom',
+            fontsize=11
+        )
+
+    plt.ylabel('Udział rekordów (%)')
+    plt.ylim(0, 110)
+    plt.grid(axis='y', linestyle='--', alpha=0.5)
+
+    plt.savefig(f'{output_dir}/rozklad_klas.png', bbox_inches='tight')
+    plt.close()
+except Exception as e:
+    print(f"Błąd podczas generowania wykresu rozkładu klas: {e}")
+
 # Kolory
 colors = ['#00008B', '#4682B4', '#ADD8E6', '#8B0000', '#CD5C5C', '#FFB6C1']
 
@@ -60,7 +94,6 @@ for col in feature_names_pl:
                     textcoords='offset points', fontsize=10)
 
     # Estetyka
-    plt.title(f'{col}', fontsize=14, fontweight='bold')
     plt.ylabel('Procent głosów wewnątrz partii (%)')
     plt.ylim(0, 115)
     plt.xticks(rotation=45, ha='right')

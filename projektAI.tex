@@ -33,9 +33,16 @@ Celem projektu jest realizacja sieci neuronowej do klasyfikacji głosowań kongr
 \section{Dane}
 \subsection{Zestaw danych}
 
-Zestaw danych użyty w projekcie (Congressional Voting Records) pochodzi z UCI Machine Learning Repository i zawiera informacje o głosowaniach kongresmenów w 1984 roku \cite{uciVoting}. Każdy rekord reprezentuje jednego kongresmena i zawiera 16 atrybutów odpowiadających jego głosowaniom w kluczowych kwestiach, a także etykietę klasy (demokrata lub republikanin). Wartości atrybutów są kodowane symbolicznie: \texttt{y} (yea) oznacza tak, \texttt{n} (nay) oznacza nie oraz \texttt{?}. W tym zbiorze \texttt{?} nie oznacza klasycznego braku danych, lecz głos inny niż \texttt{y}/\texttt{n} (np. \emph{present} lub brak jednoznacznie zadeklarowanego stanowiska).
+Zestaw danych użyty w projekcie (Congressional Voting Records) pochodzi z UCI Machine Learning Repository i zawiera informacje o głosowaniach kongresmenów w 1984 roku \cite{uciVoting}. Każdy rekord reprezentuje jednego kongresmena i zawiera 16 atrybutów odpowiadających jego głosowaniom w kluczowych kwestiach, a także etykietę klasy (demokrata lub republikanin). Wartości atrybutów są kodowane symbolicznie: \texttt{y} oznacza tak, \texttt{n} oznacza nie oraz \texttt{?}. W tym zbiorze \texttt{?} nie oznacza klasycznego braku danych, lecz głos inny niż \texttt{y}/\texttt{n} (np. \emph{present} lub brak jednoznacznie zadeklarowanego stanowiska).
 
-Zestaw zawiera 435 rekordów, z czego 45,2\% należy do klasy demokratów, a 54,8\% do republikanów. Każdy rekord składa się z 17 atrybutów: 16 atrybutów głosowań oraz 1 atrybut klasy. Zestaw danych jest stosunkowo mały, co może stanowić wyzwanie dla skutecznego trenowania modelu, zwłaszcza w kontekście unikania przeuczenia.
+Zestaw zawiera 435 rekordów, z czego 61,4\% (267) należy do klasy demokratów, a 38,6\% (168) do republikanów. Każdy rekord składa się z 17 atrybutów: 16 atrybutów głosowań oraz 1 atrybutu klasy.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.65\textwidth]{\detokenize{wykresy/rozklad_klas.png}}
+\caption{Rozkład klas w zbiorze danych}
+\label{fig:rozklad_klas}
+\end{figure}
 
 Opis poszczególnych atrybutów głosowań jest następujący:
 \begin{itemize}[label={\textbullet}]
@@ -58,7 +65,7 @@ Opis poszczególnych atrybutów głosowań jest następujący:
 \end{itemize}
 
 \subsection{Brakujące dane}
-W zbiorze dane oznaczone symbolem \texttt{?} występują w 248 rekordach, co stanowi 57\% wszystkich rekordów. Jest to znacząca ilość, która nie może zostać zignorowana i usunięta. Takie przypadki mogą wynikają z braku jednoznacznego stanowiska, dlatego w etapie przygotowania danych kodowane są jako neutralne 0. Taki sposób kodowania pozwala na zachowanie informacji, jednocześnie umożliwiając modelowi uczenie się na podstawie tych danych.
+W zbiorze dane oznaczone symbolem \texttt{?} występują w 248 rekordach, co stanowi 57\% wszystkich rekordów. Jest to znacząca ilość, która nie może zostać zignorowana i usunięta, dlatego w etapie przygotowania danych kodowane są jako neutralne 0. Taki sposób kodowania pozwala na zachowanie informacji, jednocześnie umożliwiając modelowi uczenie się na podstawie tych danych.
 
 Przykładowe rekordy ze zbioru wejściowego przedstawiono na listingu \ref{lst:house_votes_missing}.
 
