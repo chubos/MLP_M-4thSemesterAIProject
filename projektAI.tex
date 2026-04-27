@@ -777,7 +777,7 @@ lastline=140,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Skrypt eksperymentu nr 2: przeszukiwanie siatki \texttt{lr} i \texttt{mc} (\texttt{exp2\_parametry\_uczenia.py})},
+caption={Eksperyment nr 2: przeszukiwanie siatki \texttt{lr} i \texttt{mc} (\texttt{exp2\_parametry\_uczenia.py})},
 label={lst:exp2_parametry_uczenia_py}
 ]{exp2_parametry_uczenia.py}
 
@@ -829,7 +829,7 @@ lastline=220,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Skrypt eksperymentu nr 3: analiza wa\.zno\'sci g{\l}osowa\'n (\texttt{exp3\_waznosc\_glosowan.py})},
+caption={Eksperyment nr 3: analiza wa\.zno\'sci g{\l}osowa\'n},
 label={lst:exp3_waznosc_glosowan_py}
 ]{exp3_waznosc_glosowan.py}
 
@@ -849,20 +849,7 @@ Analiza wykresu pokazuje, że wpływ cech na decyzję sieci nie jest równomiern
 Eksperyment potwierdza, że największy wpływ na jakość klasyfikacji mają głosowania, w których odpowiedzi \textit{tak/nie} były najsilniej spolaryzowane między demokratami i republikanami.
 
 \subsection{Eksperyment nr 4}
-
-W eksperymencie nr 4 badano wpływ liczby danych uczących na jakość klasyfikacji.
-Założeniem było sprawdzenie, jak zmienia się skuteczność modelu na danych znanych
-(treningowych) oraz na danych nieznanych (testowych), gdy stopniowo zwiększa się
-rozmiar zbioru uczącego.
-
-\subsubsection*{Założenia eksperymentu}
-W badaniu przyjęto następującą procedurę:
-\begin{itemize}[label={\textbullet}]
-\item dane podzielono na stałą pulę uczącą i stały zbiór testowy (\texttt{20\%}),
-\item z puli uczącej tworzono podzbiory o frakcjach: \texttt{10\%, 20\%, 40\%, 60\%, 80\%, 100\%},
-\item dla każdego podzbioru trenowano nową instancję sieci,
-\item po uczeniu mierzono skuteczność \texttt{PK} oddzielnie na danych treningowych i testowych.
-\end{itemize}
+W eksperymencie zbadano wpływ rozmiaru zbioru uczącego na zdolność uogólniania sieci. Z danych wydzielono stały zbiór testowy (20\%), z pozostałej puli tworzono rosnące podzbiory treningowe o określonych frakcjach. Dla każdego podzbioru trenowano nową instancję sieci o stałej architekturze i parametrach, po czym oceniano jej skuteczność wyłącznie na stałym zbiorze testowym. Celem było zaobserwowanie, jak zwiększanie liczby próbek uczących wpływa na stabilność i jakość predykcji ocenianych na niezależnym zbiorze testowym.
 
 Implementację eksperymentu przedstawiono na listingu \ref{lst:exp4_ilosc_danych_py}.
 
@@ -874,37 +861,24 @@ lastline=220,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Skrypt eksperymentu nr 4: wp{\l}yw liczby danych ucz\k{a}cych (\texttt{exp4\_ilosc\_danych.py})},
+caption={Eksperyment nr 4: wp{\l}yw liczby danych ucz\k{a}cych},
 label={lst:exp4_ilosc_danych_py}
 ]{exp4_ilosc_danych.py}
 
-Na listingu \ref{lst:exp4_ilosc_danych_py} skrypt:
-\begin{itemize}[label={\textbullet}]
-\item przygotowuje podział \texttt{train/test} z zachowaniem proporcji klas (\texttt{stratify}),
-\item tworzy serię coraz większych podzbiorów uczących,
-\item dla każdego podzbioru trenuje sieć i oblicza \texttt{PK} na treningu oraz na teście,
-\item zapisuje wyniki do dwóch krzywych: treningowej i testowej,
-\item generuje wykres krzywych uczenia i zapisuje go jako \texttt{Fig.4\_Ilosc\_Danych\_kongres.png}.
-\end{itemize}
+Skrypt przygotowuje podział \texttt{train/test} (20\% test), tworzy podzbiory treningowe o zadanych frakcjach, trenuje dla każdego podzbioru nową sieć oraz mierzy skuteczność \texttt{PK} wyłącznie na stałym zbiorze testowym. Wyniki są zapisywane i rysowane jako pojedyncza krzywa przedstawiająca skuteczność testową w funkcji liczby próbek uczących.
 
 Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp4_learning_curve}.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{Fig.4_Ilosc_Danych_kongres.png}
-\caption{Eksperyment nr 4: skuteczność \texttt{PK [\%]} w funkcji liczby próbek uczących}
+\caption{Skuteczność \texttt{PK [\%]} w funkcji liczby próbek uczących}
 \label{fig:exp4_learning_curve}
 \end{figure}
 
-Interpretacja wykresu jest zgodna z typowym przebiegiem krzywych uczenia.
-Dla małych zbiorów model może osiągać wysoką skuteczność na treningu,
-natomiast jakość na teście jest niższa i bardziej niestabilna. Wraz ze wzrostem
-liczby próbek uczących krzywa testowa zwykle rośnie i stabilizuje się,
-co wskazuje na lepszą zdolność uogólniania.
+Dla bardzo małych zbiorów uczących skuteczność testowa jest niska, natomiast wraz ze wzrostem liczby próbek testowa skuteczność rośnie i stopniowo stabilizuje się, co świadczy o poprawie zdolności klasyfikacji modelu.
 
-\textbf{Wniosek:} zwiększanie liczby danych uczących poprawia stabilność i wiarygodność
-predykcji sieci. Eksperyment nr 4 pokazuje, że dalsze rozszerzanie zbioru danych
-jest jednym z najskuteczniejszych sposobów poprawy jakości modelu.
+Eksperyment pokazuje, że zwiększanie liczby danych uczących poprawia skuteczność i stabilność predykcji ocenianych na niezależnym zbiorze testowym, jednak po przekroczeniu pewnego progu, dalsze zwiększanie liczby próbek przynosi coraz mniejsze korzyści.
 
 \subsection{Eksperyment nr 5}
 
