@@ -3,8 +3,6 @@ import hickle as hkl
 import numpy as np
 import matplotlib.pyplot as plt 
 from sklearn.model_selection import train_test_split
-from timeit import default_timer as timer
-from tqdm import tqdm
 
 from mlp_core import mlp_m_3w # IMPORT NASZEJ SIECI BAZOWEJ
 
@@ -53,9 +51,7 @@ mlp_net = mlp_m_3w(x_tr, y_tr, K1_fixed, K2_fixed, lr_fixed, err_goal, disp_freq
 historia_train_sse = []
 historia_test_sse = []
 
-start = timer()
-
-for epoka in tqdm(range(liczba_epok_total), desc="Trenowanie"):
+for epoka in range(liczba_epok_total):
     # Wykonuje dokładnie jedną epokę uczenia
     mlp_net.train(x_tr, y_tr)
     
@@ -68,7 +64,7 @@ for epoka in tqdm(range(liczba_epok_total), desc="Trenowanie"):
     sse_test = np.sum(blad_test**2) # Równowartość net.sumsqr
     historia_test_sse.append(sse_test)
 
-print(f"Zakończono w {timer()-start:.2f} s.\n")
+print("Zakończono.\n")
 
 # 4. Rysowanie wykresu Overfittingu
 plt.figure(figsize=(10, 6))

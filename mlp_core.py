@@ -3,7 +3,7 @@ import hickle as hkl
 import numpy as np
 import nnet_jit4 as net
 import matplotlib.pyplot as plt 
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, train_test_split
 
 class mlp_m_3w:
     def __init__(self, x, y_t, K1, K2, lr, err_goal, \
@@ -51,7 +51,6 @@ class mlp_m_3w:
         for epoch in range(1, self.max_epoch+1): 
             self.y3 = self.predict(x_train)    
             self.e = y_train - self.y3 
-        
             self.SSE_t_1 = self.SSE
             self.SSE = net.sumsqr(self.e) 
             self.PK = np.mean(np.where(self.y3 >= 0, 1, -1) == y_train) * 100
@@ -62,7 +61,7 @@ class mlp_m_3w:
             if np.isnan(self.SSE): 
                 break
                         
-            self.d3 = net.deltatan_out(self.y3, self.e) 
+            self.d3 = net.deltatan(self.y3, self.e) 
             self.d2 = net.deltatan(self.y2, self.d3, self.w3)
             self.d1 = net.deltatan(self.y1, self.d2, self.w2) 
             self.dw1, self.db1 = net.learnbp(x_train,  self.d1, self.lr) 
@@ -90,6 +89,16 @@ class mlp_m_3w:
             x_train, x_test = self.data[train], self.data[test]
             y_train, y_test = np.squeeze(self.target)[train], np.squeeze(self.target)[test]
             
+            self.w1, self.b1 = net.nwtan(self.K1, self.L)
+            self.w2, self.b2 = net.nwtan(self.K2, self.K1)
+            self.w3, self.b3 = net.nwtan(self.K3, self.K2)
+            self.w1_t_1, self.b1_t_1 = self.w1.copy(), self.b1.copy()
+            self.w2_t_1, self.b2_t_1 = self.w2.copy(), self.b2.copy()
+            self.w3_t_1, self.b3_t_1 = self.w3.copy(), self.b3.copy()
+            self.SSE = 0
+            self.SSE_vec = []
+            self.PK_vec = []
+            
             self.train(x_train.T, y_train.T)
             result = self.predict(x_test.T)
             n_test_samples = test.size
@@ -97,29 +106,39 @@ class mlp_m_3w:
             
         return np.mean(PK_vec)
 
-# ==========================================
-# TESTOWANIE BAZOWE (Uruchomi się tylko, gdy odpalisz ten plik bezpośrednio)
-# ==========================================
+
 if __name__ == '__main__':
-    print("--- Szybki test sieci bazowej ---")
+    print("Test sieci bazowej")
     x, y_t, x_norm, x_n_s, y_t_s = hkl.load('kongres.hkl')
-    
-    # Przykładowe, twarde parametry do testu
-    K1_test, K2_test = 5, 5
+    K1_test, K2_test = 4, 4
     lr_test, mc_test = 1e-3, 0.9
+    err_goal_test = 0.05
+    disp_freq_test = 10
+    max_epoch_test = 400
+    initialize_test = True
     
-    test_net = mlp_m_3w(x_norm, y_t, K1_test, K2_test, lr_test, 0.05, 10, mc_test, 40, True)
-    test_net.train(x_norm, y_t)
-    
+    test_net = mlp_m_3w(x_norm, y_t, K1_test, K2_test, lr_test, err_goal_test, disp_freq_test, mc_test, max_epoch_test, initialize_test)
+
+    X = x_norm.T
+    y = np.squeeze(y_t)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+
+    x_train = X_train.T
+    x_test = X_test.T
+    y_train = y_train.reshape(1, -1)
+    y_test = y_test.reshape(1, -1)
+
+    test_net.train(x_train, y_train)
+    wyniki = test_net.predict(x_test)
+    decyzje = np.where(wyniki >= 0, 1, -1)
+    pk_test = np.mean(decyzje == y_test) * 100
+    print(f"\nSkuteczność na zbiorze testowym (20%): {pk_test:.2f}%")
+
     # Wykres testowy krzywej uczenia
     plt.figure(figsize=(8, 4))
     plt.plot(range(1, len(test_net.SSE_vec) + 1), test_net.SSE_vec, color='red')
-    plt.title('Test - Krzywa Błędu (SSE)')
     plt.grid(True)
-    plt.show()
+    plt.savefig('sse_test_core.png', dpi=300, bbox_inches='tight')
+    plt.close()
 
-    # Wyniki dla 5 pierwszych próbek
-    wyniki = test_net.predict(x_norm[:, :5])
-    decyzje = np.where(wyniki >= 0, 1, -1)
-    print("\nPrawdziwe:", y_t[:, :5].astype(int))
-    print("Przewidziane:", decyzje)
+

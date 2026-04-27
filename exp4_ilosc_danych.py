@@ -3,7 +3,6 @@ import hickle as hkl
 import numpy as np
 import matplotlib.pyplot as plt 
 from sklearn.model_selection import train_test_split
-from timeit import default_timer as timer
 
 from mlp_core import mlp_m_3w # IMPORT NASZEJ SIECI
 
@@ -35,7 +34,6 @@ wyniki_testowe = []
 liczba_probek_oX = []
 
 print("--- EKSPERYMENT 4: WPŁYW ILOŚCI DANYCH NA NAUKĘ ---")
-start = timer()
 
 for frac in frakcje:
     # Pobieramy odpowiedni procent z puli treningowej
@@ -65,7 +63,7 @@ for frac in frakcje:
     pk_test = np.mean(np.where(pred_test >= 0, 1, -1) == Y_test.T) * 100
     wyniki_testowe.append(pk_test)
 
-print(f"Zakończono w {timer()-start:.2f} s.\n")
+print("Zakończono.\n")
 
 # 4. Rysowanie wykresu
 plt.figure(figsize=(10, 6))

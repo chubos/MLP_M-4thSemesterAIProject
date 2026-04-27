@@ -23,9 +23,6 @@
 % spis treści
 \tableofcontents
 
-\clearpage
-\blankpage
-
 \section{Cel projektu}
 
 Celem projektu jest realizacja sieci neuronowej do klasyfikacji głosowań kongresowych. Głównym wyzwaniem badawczym jest przewidzenie przynależności partyjnej kongresmena (demokrata czy republikanin) na podstawie jego głosowań w 16 kluczowych kwestiach w 1984 roku. Dodatkowym zadaniem jest zbadanie wpływu różnych parametrów sieci na skuteczność klasyfikacji. Projekt ma na celu nie tylko osiągnięcie wysokiej dokładności klasyfikacji, ale także zrozumienie, które cechy głosowań są najbardziej istotne dla rozróżnienia między partiami politycznymi. Sieć zrealizowana została w języku Python.
@@ -398,7 +395,7 @@ W ten sposób kolejne epoki uczenia prowadzą do stopniowego zmniejszania błęd
 
 \subsection{Sieci neuronowe jednokierunkowe wielowarstwowe}
 
-W sieci jednokierunkowej wielowarstwowej każda warstwa ma własną macierz wag $\mathbf{W}^{(l)}$, wektor przesunięć $\mathbf{b}^{(l)}$, funkcję aktywacji $f^{(l)}(\cdot)$ oraz wektor wyjściowy $\mathbf{y}^{(l)}$. Dla trzech warstw obliczeniowych (1, 2, 3) otrzymujemy propagację sygnału od wejścia do wyjścia \cite{zajdelLab9}.
+W sieci jednokierunkowej wielowarstwowej każda warstwa ma własną macierz wag $\mathbf{W}^{(l)}$, wektor przesunięć $\mathbf{b}^{(l)}$, funkcję aktywacji $f^{(l)}(\cdot)$ oraz wektor wyjściowy $\mathbf{y}^{(l)}$. W analizowanym modelu występują dwie warstwy ukryte oraz jedna warstwa wyjściowa, oznaczone odpowiednio jako $1,2,3$. Propagacja sygnału przebiega więc od wejścia do wyjścia \cite{zajdelLab9}.
 
 \begin{figure}[ht]
 \centering
@@ -435,19 +432,14 @@ przy czym $\mathbf{y}^{(0)}=\mathbf{x}$ oraz dla pierwszej warstwy $K_0=L$.
 
 Dla wyjścia trzeciej warstwy i sygnału zadanego $\hat{\mathbf{y}}^{(3)}$ funkcję błędu SSE zapisujemy jako:
 \begin{equation}
-E = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)^2.
+E = SSE = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)^2.
 \end{equation}
 
 Po podstawieniu kolejnych warstw (łańcuchowo) otrzymuje się rozwiniętą zależność:
 \begin{equation}
-E = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(
-f^{(3)}\!\left(\sum_{i_2=1}^{K_2} w_{i_3 i_2}^{(3)}
+E = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(\hat{y}^{(3)}_{i_3}-f^{(3)}\!\left(\sum_{i_2=1}^{K_2} w_{i_3 i_2}^{(3)}
 f^{(2)}\!\left(\sum_{i_1=1}^{K_1} w_{i_2 i_1}^{(2)}
-f^{(1)}\!\left(\sum_{j=1}^{L} w_{i_1 j}^{(1)}x_j + b_{i_1}^{(1)}\right)
-+ b_{i_2}^{(2)}\right)
-+ b_{i_3}^{(3)}\right)
-+ \hat{y}^{(3)}_{i_3}
-\right)^2.
+f^{(1)}\!\left(\sum_{j=1}^{L} w_{i_1 j}^{(1)}x_j + b_{i_1}^{(1)}\right)+ b_{i_2}^{(2)}\right)+ b_{i_3}^{(3)}\right)\right)^2.
 \end{equation}
 
 W warstwie wyjściowej składnik gradientu względem wagi wyznacza się z reguły łańcuchowej:
@@ -456,7 +448,7 @@ W warstwie wyjściowej składnik gradientu względem wagi wyznacza się z reguł
 = \frac{\partial E}{\partial y^{(3)}_{i_3}}
 \frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}
 \frac{\partial z^{(3)}_{i_3}}{\partial w^{(3)}_{i_3 i_2}}
-= \left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)
+= \left(y^{(3)}_{i_3}-\hat{y}^{(3)}_{i_3}\right)
 f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
 y^{(2)}_{i_2}.
 \end{equation}
@@ -472,7 +464,7 @@ Dla warstwy drugiej (ukrytej) dostajemy:
 \frac{\partial y^{(2)}_{i_2}}{\partial z^{(2)}_{i_2}}
 \frac{\partial z^{(2)}_{i_2}}{\partial w^{(2)}_{i_2 i_1}} \\
 &= \sum_{i_3=1}^{K_3}
-\left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)
+\left(y^{(3)}_{i_3}-\hat{y}^{(3)}_{i_3}\right)
 f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
 w^{(3)}_{i_3 i_2}
 f'^{(2)}\!\left(z^{(2)}_{i_2}\right)
@@ -494,7 +486,7 @@ Dla pierwszej warstwy analogicznie:
 \frac{\partial y^{(1)}_{i_1}}{\partial z^{(1)}_{i_1}}
 \frac{\partial z^{(1)}_{i_1}}{\partial w^{(1)}_{i_1 j}} \\
 &= \sum_{i_3=1}^{K_3}
-\left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)
+\left(y^{(3)}_{i_3}-\hat{y}^{(3)}_{i_3}\right)
 f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
 \sum_{i_2=1}^{K_2}
 w^{(3)}_{i_3 i_2}
@@ -505,7 +497,7 @@ x_j.
 \end{aligned}
 \end{equation}
 
-Po wprowadzeniu oznaczen sygnalow bledu:
+Po wprowadzeniu oznaczeń sygnałów błędu:
 \begin{equation}
 \delta^{(3)}_{i_3} = \left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)f'^{(3)}\!\left(z^{(3)}_{i_3}\right),
 \end{equation}
@@ -515,43 +507,79 @@ Po wprowadzeniu oznaczen sygnalow bledu:
 \begin{equation}
 \delta^{(1)}_{i_1} = \left(\sum_{i_2=1}^{K_2} w^{(2)}_{i_2 i_1}\,\delta^{(2)}_{i_2}\right)f'^{(1)}\!\left(z^{(1)}_{i_1}\right),
 \end{equation}
-otrzymuje sie rownowazne postacie skrocone:
+otrzymujemy równoważne postacie skrócone:
 \begin{equation}
 \begin{aligned}
-\frac{\partial E}{\partial w^{(3)}_{i_3 i_2}} &= \delta^{(3)}_{i_3}y^{(2)}_{i_2},
+\frac{\partial E}{\partial w^{(3)}_{i_3 i_2}} &= -\delta^{(3)}_{i_3}y^{(2)}_{i_2},
 \qquad
-\frac{\partial E}{\partial w^{(2)}_{i_2 i_1}} = \delta^{(2)}_{i_2}y^{(1)}_{i_1},\\
-\frac{\partial E}{\partial w^{(1)}_{i_1 j}} &= \delta^{(1)}_{i_1}x_j.
+\frac{\partial E}{\partial w^{(2)}_{i_2 i_1}} = -\delta^{(2)}_{i_2}y^{(1)}_{i_1},\\
+\frac{\partial E}{\partial w^{(1)}_{i_1 j}} &= -\delta^{(1)}_{i_1}x_j.
 \end{aligned}
 \end{equation}
 
-Gradienty wzgledem przesuniec wynikaja bezposrednio z reguly lancuchowej:
+W praktyce zmiany wag zapisuje się więc bezpośrednio przez sygnały błędu:
 \begin{equation}
-\frac{\partial E}{\partial b^{(3)}_{i_3}} = \frac{\partial E}{\partial y^{(3)}_{i_3}}\frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}\frac{\partial z^{(3)}_{i_3}}{\partial b^{(3)}_{i_3}} = \delta^{(3)}_{i_3},
+\Delta w^{(3)}_{i_3 i_2} = \eta\,\delta^{(3)}_{i_3}y^{(2)}_{i_2},
+\qquad
+\Delta w^{(2)}_{i_2 i_1} = \eta\,\delta^{(2)}_{i_2}y^{(1)}_{i_1},
+\qquad
+\Delta w^{(1)}_{i_1 j} = \eta\,\delta^{(1)}_{i_1}x_j.
+\end{equation}
+
+Gradienty względem przesunięć wynikają bezpośrednio z reguły łańcuchowej:
+\begin{equation}
+\frac{\partial E}{\partial b^{(3)}_{i_3}} = \frac{\partial E}{\partial y^{(3)}_{i_3}}\frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}\frac{\partial z^{(3)}_{i_3}}{\partial b^{(3)}_{i_3}} = -\delta^{(3)}_{i_3},
 \end{equation}
 \begin{equation}
-\frac{\partial E}{\partial b^{(2)}_{i_2}} = \delta^{(2)}_{i_2},
+\frac{\partial E}{\partial b^{(2)}_{i_2}} = -\delta^{(2)}_{i_2},
 \qquad
-\frac{\partial E}{\partial b^{(1)}_{i_1}} = \delta^{(1)}_{i_1}.
+\frac{\partial E}{\partial b^{(1)}_{i_1}} = -\delta^{(1)}_{i_1}.
+\end{equation}
+
+Analogicznie dla biasów otrzymujemy aktualizacje:
+\begin{equation}
+\Delta b^{(3)}_{i_3} = \eta\,\delta^{(3)}_{i_3},
+\qquad
+\Delta b^{(2)}_{i_2} = \eta\,\delta^{(2)}_{i_2},
+\qquad
+\Delta b^{(1)}_{i_1} = \eta\,\delta^{(1)}_{i_1}.
 \end{equation}
 
 Powyższe zależności odpowiadają klasycznemu algorytmowi backpropagation dla sieci wielowarstwowej \cite{zajdelLab9}.
 \subsection{Metoda momentum}
 
-W uczeniu pod nadzorem modyfikacja gradientowej reguły uczenia z członem momentum może zostać zapisana jako:
+W celu poprawy stabilności procesu uczenia stosuje się metodę zachowania pędu (\textit{momentum}).
+Człon pędu ogranicza oscylacje aktualizacji i pozwala utrzymać kierunek ruchu parametrów na bardziej płaskich fragmentach funkcji celu.
+
+Klasyczny zapis skalarny ma postać:
 \begin{equation}
-w_{ij}(t+1)=w_{ij}(t)+\Delta w_{ij}(t)+m_c M_{ij}(t),
+w_{n+1}=w_n+\Delta w_n+\alpha\,\Delta w_{n-1},
 \end{equation}
 gdzie:
 \begin{equation}
-\Delta w_{ij}(t)=-\eta\frac{\partial E}{\partial w_{ij}}(t),
+\Delta w_n=-\eta\,\frac{\partial E}{\partial w}(n),
 \qquad
-M_{ij}(t)=w_{ij}(t)-w_{ij}(t-1).
+0<\alpha\leq 1.
 \end{equation}
 
-Wspolczynnik $m_c\in[0,1]$ jest wspolczynnikiem momentum. Dla $m_c=0$ otrzymujemy klasyczna regule gradientowa bez przyspieszenia.
+Współczynnik $\alpha$ (momentum) określa udział poprzedniej poprawki wag w bieżącej aktualizacji.
+Dla $\alpha=0$ otrzymujemy klasyczną regułę największego spadku bez pędu.
 
-Analogiczna aktualizacja dla przesuniec:
+Równoważnie można wprowadzić zmienną pędu:
+\begin{equation}
+M_{ij}(t)=w_{ij}(t)-w_{ij}(t-1),
+\end{equation}
+i zapisać aktualizację:
+\begin{equation}
+w_{ij}(t+1)=w_{ij}(t)+\Delta w_{ij}(t)+m_c M_{ij}(t),
+\end{equation}
+\begin{equation}
+\Delta w_{ij}(t)=-\eta\frac{\partial E}{\partial w_{ij}}(t),
+\qquad
+m_c\equiv\alpha.
+\end{equation}
+
+Analogiczna aktualizacja dla przesunięć:
 \begin{equation}
 b_i(t+1)=b_i(t)+\Delta b_i(t)+m_c M_{b_i}(t),
 \end{equation}
@@ -561,25 +589,8 @@ b_i(t+1)=b_i(t)+\Delta b_i(t)+m_c M_{b_i}(t),
 M_{b_i}(t)=b_i(t)-b_i(t-1).
 \end{equation}
 
-W zapisie warstwowym (dla warstwy $l$):
-\begin{equation}
-\mathbf{W}^{(l)}(t+1)=\mathbf{W}^{(l)}(t)+\Delta\mathbf{W}^{(l)}(t)+m_c\mathbf{M}_{W}^{(l)}(t),
-\end{equation}
-\begin{equation}
-\Delta\mathbf{W}^{(l)}(t)=-\eta\frac{\partial E}{\partial \mathbf{W}^{(l)}}(t),
-\qquad
-\mathbf{M}_{W}^{(l)}(t)=\mathbf{W}^{(l)}(t)-\mathbf{W}^{(l)}(t-1),
-\end{equation}
-\begin{equation}
-\mathbf{b}^{(l)}(t+1)=\mathbf{b}^{(l)}(t)+\Delta\mathbf{b}^{(l)}(t)+m_c\mathbf{M}_{b}^{(l)}(t),
-\end{equation}
-\begin{equation}
-\Delta\mathbf{b}^{(l)}(t)=-\eta\frac{\partial E}{\partial \mathbf{b}^{(l)}}(t),
-\qquad
-\mathbf{M}_{b}^{(l)}(t)=\mathbf{b}^{(l)}(t)-\mathbf{b}^{(l)}(t-1).
-\end{equation}
 
-W praktyce czesto przyjmuje sie $m_c\approx 0{,}9$--$0{,}95$, co zwykle zwieksza szybkosc uczenia i ogranicza oscylacje w trakcie minimalizacji funkcji celu \cite{zajdelLab}.
+W praktyce często przyjmuje się $m_c\approx 0{,}9$--$0{,}95$, co zwykle zwiększa szybkość uczenia i ogranicza oscylacje podczas minimalizacji funkcji celu \cite{zajdelLab}.
 
 \section{Implementacja sieci neuronowej}
 
@@ -600,15 +611,32 @@ caption={Implementacja klasy sieci MLP},
 label={lst:mlp_core_py}
 ]{mlp_core.py}
 
-\subsection{Opis działania kodu}
-Fundamentem działania klasy jest proces inicjalizacji realizowany w metodzie \texttt{\_\_init\_\_}. Konfiguruje ona kluczowe hiperparametry sieci, takie jak rozmiary warstw ukrytych ($K_1$, $K_2$), współczynnik uczenia (\textit{learning rate}) oraz współczynnik momentum. 
+\subsection{Działanie kodu}
+Fundamentem działania klasy jest proces inicjalizacji realizowany w metodzie \texttt{\_\_init\_\_}. Konfiguruje ona kluczowe hiperparametry sieci, takie jak rozmiary warstw ukrytych ($K_1$, $K_2$), współczynnik uczenia oraz współczynnik momentum. 
 
-Istotnym aspektem jest tutaj mechanizm zarządzania wagami. System pozwala na ich losową inicjalizację lub odczytanie uprzednio wytrenowanych wartości, co zapewnia powtarzalność eksperymentów. Za proces wnioskowania odpowiada metoda \texttt{predict}, która realizuje pełną propagację sygnału w przód. W architekturze tej zarówno obie warstwy ukryte, jak i warstwa wyjściowa, wykorzystują funkcję aktywacji \texttt{tansig} (tangens hiperboliczny). Dzięki temu sieć generuje wektor odpowiedzi $y_3$ o wartościach znormalizowanych w przedziale $(-1, 1)$. 
+Ważnym aspektem jest tutaj mechanizm zarządzania wagami. System pozwala na ich losową inicjalizację lub odczytanie uprzednio wytrenowanych wartości, co zapewnia powtarzalność eksperymentów. Za proces wnioskowania odpowiada metoda \texttt{predict}, która realizuje pełną propagację sygnału w przód. W architekturze tej zarówno obie warstwy ukryte, jak i warstwa wyjściowa, wykorzystują funkcję aktywacji \texttt{tansig}. Dzięki temu sieć generuje wektor odpowiedzi $y_3$ o wartościach znormalizowanych w przedziale $(-1, 1)$. 
 
 Właściwy proces optymalizacji parametrów odbywa się w metodzie \texttt{train}. Działa ona iteracyjnie, gdzie w każdej epoce obliczany jest błąd $e$, suma kwadratów błędów (SSE) oraz skuteczność klasyfikacji (PK). Na podstawie tych danych wyznaczany jest gradient błędu metodą wstecznej propagacji, a następnie dokonywana jest aktualizacja wag i biasów. 
 
+Przykładowe uruchomienie programu wykorzystuje sieć o parametrach $K_1=4$, $K_2=4$, współczynniku uczenia $lr=10^{-3}$, współczynniku momentum $mc=0{,}9$, progu błędu $err\_goal=0{,}05$ oraz maksymalnie $400$ epokach uczenia. Zbiór danych został podzielony na część treningową i testową w proporcji $80/20$. Przebieg wartości $SSE$ w kolejnych epokach przedstawia rysunek \ref{fig:sse_test}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.75\textwidth]{\detokenize{sse_test_core.png}}
+\caption{Przebieg błędu $SSE$ podczas uczenia przykładowej sieci}
+\label{fig:sse_test}
+\end{figure}
+
+Jak widać na wykresie, błąd SSE maleje w początkowych epokach bardzo szybko, a następnie stabilizuje się na niższym poziomie, co oznacza, że sieć stopniowo uczy się poprawnego odwzorowania danych wejściowych. Oznacza to, że główny mechanizm uczenia działa prawidłowo, a sieć jest w stanie dostosować swoje parametry do zadania klasyfikacji.
+
 \subsection{Walidacja krzyżowa}
-W celu obiektywnej oceny zdolności generalizacyjnych modelu zaimplementowano metodę \texttt{train\_CV}. Wykorzystuje ona strategię warstwowej walidacji krzyżowej (\textit{StratifiedKFold}), dzieląc zbiór danych na określoną liczbę podzbiorów (foldów) z zachowaniem proporcji klas. 
+W celu obiektywnej oceny zdolności generalizacyjnych modelu zaimplementowano warstwową walidację krzyżową za pomocą metody \texttt{train\_CV}. Metoda ta polega na podzieleniu zbioru danych na $k$ rozłącznych podzbiorów (foldów) o zbliżonych rozmiarach, przy czym każdy fold zachowuje proporcję klas z całego zbioru. Dla każdego foldu model jest trenowany na pozostałych $k-1$ foldach, a następnie ewaluowany na wydzielonym foldzie testowym. Procedura powtarza się $k$ razy, każdorazowo wybierając inny fold jako zbiór testowy. Średnia ze wszystkich $k$ wyników oceny stanowi ostateczne potwierdzenie poprawności modelu.
+
+\begin{equation}
+PK_{\text{mean}} = \frac{1}{k} \sum_{i=1}^{k} PK^{(i)}.
+\end{equation}
+
+
 
 \subsection{Moduł obliczeniowy}
 W projekcie kluczową rolę pełni moduł obliczeniowy, który jest biblioteką
@@ -625,7 +653,7 @@ lastline=220,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Modu{\l} obliczeń matematycznych},
+caption={Modu{\l} oblicze{\'n} matematycznych},
 label={lst:nnet_jit4_py}
 ]{nnet_jit4.py}
 
@@ -639,17 +667,13 @@ co poprawia stabilność pierwszych epok uczenia.
 
 \item \texttt{rands(a, b)}:
 Losowa inicjalizacja warstwy wyjściowej (wagi i biasy).
-W tym projekcie warstwa wyjściowa jest liniowa, dlatego do startu wystarcza
-prosta inicjalizacja losowa z zakresu \texttt{[-1, 1]}.
+Ponieważ w tym modelu również warstwa wyjściowa korzysta z aktywacji \texttt{tansig},
+na starcie wystarcza prosta inicjalizacja losowa z zakresu \texttt{[-1, 1]}.
 
 \item \texttt{tansig(n, b)}:
-Funkcja aktywacji \texttt{tanh}-sigmoid dla obu warstw ukrytych.
+Funkcja aktywacji \texttt{tanh} dla wszystkich warstw sieci, w tym warstwy wyjściowej.
 Przekształca pobudzenie neuronu do zakresu \texttt{(-1, 1)}, co pasuje
 do kodowania wejść \texttt{-1/0/1} i dobrze współpracuje z backpropagation.
-
-\item \texttt{tansig(n, b)}:
-Aktywacja \texttt{tanh} warstwy wyjściowej.
-Model zwraca wartość z zakresu \texttt{(-1, 1)}, która jest interpretowana przez znak jako decyzja klasowa.
 
 \item \texttt{sumsqr(a)}:
 Oblicza sumę kwadratów błędów \texttt{SSE}:
@@ -658,15 +682,11 @@ SSE = \sum_{q=1}^{Q} e_q^2.
 \end{equation}
 Ta miara jest monitorowana podczas uczenia i używana do oceny zbieżności.
 
-\item \texttt{deltatan\_out(a, d)}:
-Wyznacza sygnał błędu (delta) dla warstwy wyjściowej z aktywacją \texttt{tansig}.
-W tym przypadku używana jest pochodna $1-a^2$,
-dlatego delta jest skalowana lokalnym nachyleniem funkcji aktywacji.
-
 \item \texttt{deltatan(a, d, w)}:
-Wyznacza delty dla warstw ukrytych z aktywacją \texttt{tansig},
-uwzględniając pochodną $1-a^2$ oraz propagację błędu przez macierze wag
-z warstwy następnej.
+Wyznacza sygnał błędu (delta) dla warstwy wyjściowej oraz warstw ukrytych z aktywacją \texttt{tanh}.
+Jeśli nie podano macierzy wag, obliczana jest delta warstwy wyjściowej z użyciem pochodnej $1-a^2$.
+Jeśli przekazano macierz wag, funkcja propaguje błąd do warstwy ukrytej, uwzględniając
+lokalne nachylenie funkcji aktywacji i wpływ wag z warstwy następnej.
 
 \item \texttt{learnbp(p, d, lr)}:
 Oblicza gradientowy krok aktualizacji wag i biasów:
@@ -675,7 +695,7 @@ Oblicza gradientowy krok aktualizacji wag i biasów:
 \qquad
 \Delta \mathbf{b} = \eta\, \delta\, \mathbf{1}.
 \end{equation}
-Wartości te są następnie łączone w \texttt{mlp\_core.py} z członem momentum.
+Wartości te są łączone następnie z członem momentum.
 \end{itemize}
 
 
@@ -694,11 +714,11 @@ W pierwszym eksperymencie badano wpływ liczby neuronów w dwóch warstwach ukry
 (\texttt{K1}, \texttt{K2}) na jakość klasyfikacji. Celem było znalezienie takiej architektury,
 która zapewnia najwyższą średnią skuteczność \texttt{PK} przy stałych parametrach uczenia.
 
-\subsubsection*{Założenia eksperymentu}
+
 Przyjęto następującą konfigurację:
 \begin{itemize}[label={\textbullet}]
-\item stałe parametry uczenia: \texttt{lr = 1e-3}, \texttt{mc = 0.9}, \texttt{max\_epoch = 40},
-\item przeszukiwana siatka architektury: $K1, K2 \in \{1, 2, \ldots, 10\}$,
+\item stałe parametry uczenia: \texttt{lr = 1e-3}, \texttt{mc = 0.9}, \texttt{max\_epoch = 400},
+\item $K1, K2 \in \{1, 2, \ldots, 10\}$,
 \item ocena jakości: średnie \texttt{PK [\%]} z \texttt{10}-krotnej walidacji krzyżowej
 \texttt{StratifiedKFold}.
 \end{itemize}
@@ -713,44 +733,35 @@ lastline=120,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Skrypt eksperymentu nr 1: przeszukiwanie siatki \texttt{K1} i \texttt{K2} (\texttt{exp1\_architektura.py})},
+caption={Eksperyment nr 1: przeszukiwanie siatki \texttt{K1} i \texttt{K2}},
 label={lst:exp1_architektura_py}
 ]{exp1_architektura.py}
 
-Na listingu \ref{lst:exp1_architektura_py} skrypt:
-\begin{itemize}[label={\textbullet}]
-\item wczytuje dane \texttt{kongres.hkl} i wybiera macierz wejściową \texttt{x\_norm},
-\item definiuje siatkę wartości \texttt{K1} i \texttt{K2},
-\item dla każdej pary \texttt{(K1, K2)} uczy model \texttt{mlp\_m\_3w} i oblicza \texttt{PK} w walidacji \texttt{CV},
-\item zapisuje wyniki do macierzy \texttt{PK\_2D\_K1K2},
-\item wyznacza i wypisuje najlepszą parę \texttt{K1}, \texttt{K2},
-\item rysuje powierzchnię 3D zależności \texttt{PK = f(K1, K2)}.
-\end{itemize}
+Dla każdej pary \texttt{(K1, K2)} skrypt uczy model i oblicza skuteczność \texttt{PK} wykorzystując walidację krzyżową. Wyniki poszczególnych par są zapisywane w macierzy, z której skrypt wyznacza i wypisuje optymalną kombinację. Na koniec rysuje interaktywną powierzchnię 3D ilustrującą zależność \texttt{PK = f(K1, K2)}.
 
 Wynik eksperymentu przedstawiono na rysunku \ref{fig:exp1_k1k2_surface}.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{Fig.1_PK_K1K2_kongres.png}
-\caption{Eksperyment nr 1: skuteczność \texttt{PK [\%]} w funkcji liczby neuronów \texttt{K1} i \texttt{K2}}
+\caption{Skuteczność \texttt{PK [\%]} w funkcji liczby neuronów \texttt{K1} i \texttt{K2}}
 \label{fig:exp1_k1k2_surface}
 \end{figure}
 
-\textbf{Wniosek:} na podstawie uzyskanych wyników jako konfigurację optymalną do kolejnych eksperymentów
-przyjęto \texttt{K1 = 5} oraz \texttt{K2 = 8}.
+Na podstawie uzyskanych wyników jako konfigurację optymalną do kolejnych eksperymentów
+przyjęto \texttt{K1 = 8} oraz \texttt{K2 = 5}.
 
 \subsection{Eksperyment nr 2}
 
-W eksperymencie nr 2 badano wpływ parametrów uczenia na skuteczność klasyfikacji,
-przy ustalonej architekturze z eksperymentu nr 1 (\texttt{K1 = 5}, \texttt{K2 = 8}).
+W eksperymencie badano wpływ parametrów uczenia na skuteczność klasyfikacji,
+przy ustalonej architekturze z eksperymentu nr 1 (\texttt{K1 = 8}, \texttt{K2 = 5}).
 Przeszukiwano pary wartości współczynnika uczenia \texttt{lr} oraz współczynnika momentum \texttt{mc}
 i wybierano konfigurację o najwyższej średniej skuteczności \texttt{PK}.
 
-\subsubsection*{Założenia eksperymentu}
 W badaniu przyjęto następującą konfigurację:
 \begin{itemize}[label={\textbullet}]
-\item stała architektura sieci: \texttt{K1 = 5}, \texttt{K2 = 8},
-\item stałe warunki uczenia: \texttt{max\_epoch = 40}, \texttt{err\_goal = 0.05},
+\item stała architektura sieci: \texttt{K1 = 8}, \texttt{K2 = 5},
+\item stałe warunki uczenia: \texttt{max\_epoch = 400}, \texttt{err\_goal = 0.05},
 \item przeszukiwana siatka parametrów: $lr \in [10^{-5}, 10^{-2}]$ (skala logarytmiczna),
 \item przeszukiwana siatka parametrów: $mc \in \{0.05, 0.10, \ldots, 0.95\}$,
 \item ocena jakości: średnia skuteczność \texttt{PK [\%]} z \texttt{10}-krotnej walidacji krzyżowej.
@@ -770,23 +781,14 @@ caption={Skrypt eksperymentu nr 2: przeszukiwanie siatki \texttt{lr} i \texttt{m
 label={lst:exp2_parametry_uczenia_py}
 ]{exp2_parametry_uczenia.py}
 
-Na listingu \ref{lst:exp2_parametry_uczenia_py} skrypt:
-\begin{itemize}[label={\textbullet}]
-\item wczytuje dane z pliku \texttt{kongres.hkl} i wybiera macierz cech \texttt{x\_norm},
-\item ustala architekturę sieci i parametry stałe eksperymentu,
-\item buduje dwuwymiarową siatkę hiperparametrów \texttt{(lr, mc)},
-\item dla każdej pary \texttt{(lr, mc)} uruchamia uczenie modelu oraz ocenę \texttt{PK} metodą \texttt{StratifiedKFold},
-\item zapisuje wyniki do macierzy \texttt{PK\_2D\_lrmc},
-\item wyznacza najlepszy punkt siatki i wypisuje najlepsze \texttt{lr}, \texttt{mc} oraz \texttt{PK},
-\item tworzy wykres powierzchniowy 3D i zapisuje go jako \texttt{Fig.2\_PK\_lrmc\_kongres.png}.
-\end{itemize}
+Dla każdej pary \texttt{(lr, mc)} z dwuwymiarowej siatki hiperparametrów skrypt uruchamia uczenie modelu i oblicza skuteczność \texttt{PK} metodą walidacji krzyżowej. Wyniki są zapisywane w macierzy, z której wyznaczana jest optymalna kombinacja parametrów.
 
 Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp2_lrmc_surface}.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{Fig.2_PK_lrmc_kongres.png}
-\caption{Eksperyment nr 2: skuteczność \texttt{PK [\%]} w funkcji \texttt{log10(lr)} i \texttt{mc}}
+\caption{Skuteczność \texttt{PK [\%]} w funkcji \texttt{log10(lr)} i \texttt{mc}}
 \label{fig:exp2_lrmc_surface}
 \end{figure}
 
@@ -794,21 +796,11 @@ Analiza powierzchni wskazuje, że model osiąga wysoką skuteczność w relatywn
 jednak dla zbyt dużych wartości \texttt{lr} pojawiają się wyraźne spadki \texttt{PK}. Oznacza to,
 że zbyt agresywne kroki aktualizacji wag destabilizują uczenie i pogarszają jakość klasyfikacji.
 
-\textbf{Tymczasowo przyjęte (losowe) wartości do późniejszej podmiany:}
-\begin{itemize}[label={\textbullet}]
-\item \texttt{lr = 7e-4}
-\item \texttt{mc = 0.85}
-\end{itemize}
-
-\textbf{Wniosek:} eksperyment nr 2 potwierdza, że właściwy dobór parametrów uczenia
-ma kluczowe znaczenie dla stabilności i jakości działania sieci. W wersji końcowej raportu
-wartości \texttt{lr} i \texttt{mc} należy uzupełnić dokładnie zgodnie z najlepszym punktem
-wyznaczonym przez skrypt.
+Na podstawie uzyskanych wyników otrzymano optymalną konfigurację parametrów uczenia: \texttt{lr = 0.0001} oraz \texttt{mc = 0.80}.
 
 \subsection{Eksperyment nr 3}
 
-W eksperymencie nr 3 przeprowadzono analizę ważności poszczególnych głosowań
-(\emph{ablation study}), aby sprawdzić, które cechy wejściowe mają największy wpływ
+W eksperymencie przeprowadzono analizę ważności poszczególnych głosowań, aby sprawdzić, które cechy wejściowe mają największy wpływ
 na decyzję sieci neuronowej. Celem było oszacowanie, o ile pogarsza się skuteczność
 klasyfikacji po usunięciu informacji o pojedynczym głosowaniu.
 
@@ -841,33 +833,20 @@ caption={Skrypt eksperymentu nr 3: analiza wa\.zno\'sci g{\l}osowa\'n (\texttt{e
 label={lst:exp3_waznosc_glosowan_py}
 ]{exp3_waznosc_glosowan.py}
 
-Na listingu \ref{lst:exp3_waznosc_glosowan_py} skrypt:
-\begin{itemize}[label={\textbullet}]
-\item oblicza wynik bazowy \texttt{PK} dla pełnego zestawu cech,
-\item iteracyjnie zeruje każdą cechę (każde głosowanie) i trenuje model ponownie,
-\item wyznacza spadek skuteczności względem modelu bazowego,
-\item zapisuje wyniki w wektorze \texttt{spadki\_pk},
-\item tworzy wykres słupkowy, gdzie wysokość słupka odpowiada sile wpływu danej cechy.
-\end{itemize}
+Skrypt początkowo wyznacza bazową skuteczność \texttt{PK} dla pełnego zestawu cech, a następnie dla każdego głosowania osobno neutralizuje daną cechę i ponownie trenuje model. Różnica względem wyniku bazowego jest zapisywana w wektorze, co pozwala ocenić, które głosowanie miało największy wpływ na klasyfikację.
 
 Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp3_vote_importance}.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.95\textwidth]{Fig.3_Waznosc_Glosowan_kongres.png}
-\caption{Eksperyment nr 3: ważność poszczególnych głosowań wyrażona spadkiem \texttt{PK [\%]} po neutralizacji cechy}
+\caption{Ważność poszczególnych głosowań wyrażona spadkiem \texttt{PK [\%]} po neutralizacji cechy}
 \label{fig:exp3_vote_importance}
 \end{figure}
 
-Analiza wykresu pokazuje, że wpływ cech na decyzję sieci nie jest równomierny.
-Część głosowań powoduje wyraźny spadek skuteczności po neutralizacji,
-co oznacza, że niosą silną informację rozróżniającą klasy. Jednocześnie dla części cech
-spadek jest niewielki (lub bliski zeru), co sugeruje ich mniejszą przydatność
-w obecnej konfiguracji modelu.
+Analiza wykresu pokazuje, że wpływ cech na decyzję sieci nie jest równomierny. Największy spadek skuteczności wystąpił dla kwestii \texttt{physician-fee-freeze} (około \(4.2\%\)), co wskazuje na dużą zawartość informacyjną. Istotne, ale mniejsze spadki obserwowano także dla \texttt{synfuels-cutback} (około \(1.2\%\)) oraz \texttt{el-salvador-aid} (około \(0.9\%\)).
 
-\textbf{Wniosek:} eksperyment nr 3 potwierdza, że klasyfikacja opiera się głównie na podzbiorze
-najbardziej informatywnych głosowań. Wynik ten uzasadnia dalsze analizy selekcji cech,
-ponieważ redukcja mniej istotnych wejść może uprościć model bez istotnej utraty jakości.
+Eksperyment potwierdza, że największy wpływ na jakość klasyfikacji mają głosowania, w których odpowiedzi \textit{tak/nie} były najsilniej spolaryzowane między demokratami i republikanami.
 
 \subsection{Eksperyment nr 4}
 

@@ -106,16 +106,12 @@ def purelin(n, b):
     return a 
 
 @njit(fastmath=True)
-def deltatan(a, d, *w):
-    if not w:
-        d = (1.0 - (a * a)) * d 
+def deltatan(a, d, w=None):
+    if w is None:
+        return (1.0 - (a * a)) * d
     else:
-        d = (1.0 - (a * a)) * np.dot(np.transpose(w[0]), d)
-    return d 
+        return (1.0 - (a * a)) * np.dot(w.T, d)
 
-@njit(fastmath=True)
-def deltatan_out(a, d):
-    return (1.0 - (a * a)) * d
 
 @njit(fastmath=True)
 def deltalog(a, d, *w): 
