@@ -10,17 +10,17 @@ from mlp_core import mlp_m_3w # IMPORT NASZEJ SIECI
 x, y_t, x_norm, x_n_s, y_t_s = hkl.load('kongres.hkl')
 X_all, Y_all = x_norm.T, y_t.T     
 
-# Aby wywołać przeuczenie: dajemy mało danych do nauki (30%) i dużo do testów (70%)
+# Aby wywołać przeuczenie: dajemy bardzo mało danych do nauki i dużo do testów
 X_train, X_test, Y_train, Y_test = train_test_split(
-    X_all, Y_all, test_size=0.7, stratify=Y_all, random_state=42
+    X_all, Y_all, test_size=0.8, stratify=Y_all, random_state=42
 )
 
 # Wracamy do macierzy [cechy, próbki]
 x_tr, y_tr = X_train.T, Y_train.T
 x_te, y_te = X_test.T, Y_test.T
 
-# 2. Parametry sprzyjające przeuczeniu (zbyt duża sieć)
-K1_fixed, K2_fixed = 8, 8
+# 2. Parametry sprzyjające przeuczeniu (duża pojemność modelu)
+K1_fixed, K2_fixed = 12, 12
 lr_fixed = 1e-3
 mc_fixed = 0.9
 
@@ -28,7 +28,7 @@ mc_fixed = 0.9
 err_goal = 0.00001 
 max_epoch_single = 1 
 disp_freq = 10 
-liczba_epok_total = 150 # Ile kroków zrobimy łącznie
+liczba_epok_total = 180 # Dłuższa obserwacja ułatwia uchwycenie przeuczenia
 
 print("--- EKSPERYMENT 5: ZJAWISKO PRZEUCZENIA (OVERFITTING) ---")
 print(f"Rozpoczynam badanie krok po kroku przez {liczba_epok_total} epok...")
@@ -53,21 +53,38 @@ for epoka in range(liczba_epok_total):
 
 print("Zakończono.\n")
 
+historia_train_sse = np.array(historia_train_sse)
+historia_test_sse = np.array(historia_test_sse)
+
 # 3. Rysowanie wykresu Overfittingu
 plt.figure(figsize=(10, 6))
 
-plt.plot(range(1, liczba_epok_total + 1), historia_train_sse, color='blue', linewidth=2, label='Błąd Treningowy (SSE)')
-plt.plot(range(1, liczba_epok_total + 1), historia_test_sse, color='red', linewidth=2, label='Błąd Testowy (SSE)')
+epoki = np.arange(1, liczba_epok_total + 1)
+plt.plot(epoki, historia_train_sse, color='blue', linewidth=2, label='Błąd Treningowy (SSE)')
+plt.plot(epoki, historia_test_sse, color='red', linewidth=2, label='Błąd Testowy (SSE)')
 
 plt.title('Zjawisko Przeuczenia (Overfitting) - Błąd w czasie', fontsize=14)
 plt.xlabel('Epoka uczenia', fontsize=12)
 plt.ylabel('Suma Kwadratów Błędów (SSE)', fontsize=12)
 
 # Zaznaczenie momentu, w którym należy przerwać naukę (najniższy błąd testowy)
-optymalna_epoka = np.argmin(historia_test_sse) + 1
-najmniejszy_blad = min(historia_test_sse)
+optymalna_epoka = int(np.argmin(historia_test_sse) + 1)
+najmniejszy_blad = float(np.min(historia_test_sse))
 plt.axvline(optymalna_epoka, color='black', linestyle=':', label=f'Early Stopping (Epoka {optymalna_epoka})')
 plt.plot(optymalna_epoka, najmniejszy_blad, 'ko') # Czarna kropka w optimum
+
+# Podświetlamy obszar po minimum błędu testowego jako strefę przeuczenia
+plt.axvspan(optymalna_epoka, liczba_epok_total, color='salmon', alpha=0.15, label='Strefa potencjalnego przeuczenia')
+
+if optymalna_epoka < liczba_epok_total:
+    wzrost_po_min = historia_test_sse[-1] - najmniejszy_blad
+    plt.text(
+        optymalna_epoka + 2,
+        najmniejszy_blad,
+        f'Wzrost SSE test po minimum: {wzrost_po_min:.2f}',
+        fontsize=9,
+        color='darkred'
+    )
 
 plt.legend(loc="upper right")
 plt.grid(True, linestyle='--', alpha=0.5)
