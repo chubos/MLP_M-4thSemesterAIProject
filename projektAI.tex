@@ -69,7 +69,7 @@ Przykładowe rekordy ze zbioru wejściowego przedstawiono na listingu \ref{lst:h
 \begin{samepage}
 \begin{center}
 \begin{minipage}{\linewidth}
-\iffalse
+
 \lstinputlisting[
 inputencoding=utf8/cp1250,
 firstline=1,
@@ -80,7 +80,7 @@ frame=single,
 caption={Przyk{\l}adowe rekordy ze zbioru wej\'sciowego z brakuj\k{a}cymi danymi},
 label={lst:house_votes_missing}
 ] {house-votes-84.data}
-\fi
+
 \end{minipage}
 \end{center}
 \end{samepage}
@@ -93,7 +93,7 @@ Równocześnie przekształcono etykietę klasy, przypisując demokratom identyfi
 Implementację transformacji danych przedstawiono na listingu \ref{lst:transformacja_py}.
 
 
-\iffalse
+
 \lstinputlisting[
 language=Python,
 inputencoding=utf8/cp1250,
@@ -105,11 +105,11 @@ frame=single,
 caption={Skrypt przygotowania danych do formatu \texttt{CSV}},
 label={lst:transformacja_py}
 ] {transformacja.py}
-\fi
+
 
 Przykładowe rekordy po transformacji przedstawiono na listingu \ref{lst:transformed_votes_sample}.
 
-\iffalse
+
 \lstinputlisting[
 inputencoding=utf8/cp1250,
 firstline=1,
@@ -120,11 +120,11 @@ frame=single,
 caption={Przyk{\l}adowe rekordy po transformacji},
 label={lst:transformed_votes_sample}
 ] {transformed_votes.csv}
-\fi
+
 
 Na końcu etapu przygotowania danych wykonano dodatkową konwersję pliku \texttt{CSV} do formatu \texttt{Hickle} przy pomocy skryptu \ref{lst:hkl_py}. Celem tej operacji było przyspieszenie i uproszczenie dalszego wczytywania danych w programie uczącym: zamiast każdorazowo parsować plik tekstowy \texttt{CSV}, aplikacja ładuje bezpośrednio gotowe tablice \texttt{NumPy} z pliku binarnego.
 
-\iffalse
+
 \lstinputlisting[
 language=Python,
 inputencoding=utf8/cp1250,
@@ -136,7 +136,7 @@ frame=single,
 caption={Skrypt konwersji z formatu \texttt{CSV} do \texttt{Hickle} \texttt{.hkl}},
 label={lst:hkl_py}
 ]{hkl.py}
-\fi
+
 
 Skrypt zapisuje dane w postaci listy: \texttt{[x, y\_t, x\_norm, x\_n\_s, y\_t\_s]}. W tym projekcie przyjęto \texttt{x\_norm = x}, a część oznaczona jako zbiór testowy w pliku \texttt{.hkl} jest taka sama jak zbiór pełny (\texttt{x\_n\_s = x\_norm}, \texttt{y\_t\_s = y\_t}). Nie wykonano tu stałego podziału typu train/test, ponieważ właściwy podział realizowany jest później dynamicznie w trakcie walidacji krzyżowej \texttt{StratifiedKFold}.
 
@@ -420,7 +420,7 @@ Całą sieć można zapisać jako złożenie przekształceń:
 \mathbf{y}^{(3)} = f^{(3)}\!\left(\mathbf{W}^{(3)} f^{(2)}\!\left(\mathbf{W}^{(2)} f^{(1)}\!\left(\mathbf{W}^{(1)}\mathbf{x}+\mathbf{b}^{(1)}\right)+\mathbf{b}^{(2)}\right)+\mathbf{b}^{(3)}\right).
 \end{equation}
 
-W notacji indeksowej (zgodnej z opisem laboratoryjnym) dla neuronu $i_l$ warstwy $l$:
+W notacji indeksowej dla neuronu $i_l$ warstwy $l$:
 \begin{equation}
 z_{i_l}^{(l)} = \sum_{i_{l-1}=1}^{K_{l-1}} w_{i_l i_{l-1}}^{(l)} y_{i_{l-1}}^{(l-1)} + b_{i_l}^{(l)},
 \qquad
@@ -804,7 +804,6 @@ W eksperymencie przeprowadzono analizę ważności poszczególnych głosowań, a
 na decyzję sieci neuronowej. Celem było oszacowanie, o ile pogarsza się skuteczność
 klasyfikacji po usunięciu informacji o pojedynczym głosowaniu.
 
-\subsubsection*{Założenia eksperymentu}
 W badaniu przyjęto następującą procedurę:
 \begin{itemize}[label={\textbullet}]
 \item punkt odniesienia: model bazowy trenowany na kompletnym wektorze 16 głosowań,
@@ -879,65 +878,6 @@ Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp4_learning_curve}.
 Dla bardzo małych zbiorów uczących skuteczność testowa jest niska, natomiast wraz ze wzrostem liczby próbek testowa skuteczność rośnie i stopniowo stabilizuje się, co świadczy o poprawie zdolności klasyfikacji modelu.
 
 Eksperyment pokazuje, że zwiększanie liczby danych uczących poprawia skuteczność i stabilność predykcji ocenianych na niezależnym zbiorze testowym, jednak po przekroczeniu pewnego progu, dalsze zwiększanie liczby próbek przynosi coraz mniejsze korzyści.
-
-\subsection{Eksperyment nr 5}
-
-W eksperymencie nr 5 analizowano zjawisko przeuczenia (\emph{overfitting})
-na podstawie przebiegu błędu treningowego i testowego w kolejnych epokach.
-Celem było wskazanie momentu, w którym dalsze uczenie nie poprawia
-uogólniania modelu i należy zastosować zatrzymanie uczenia (\emph{early stopping}).
-
-\subsubsection*{Założenia eksperymentu}
-W badaniu przyjęto konfigurację, która celowo zwiększa ryzyko przeuczenia:
-\begin{itemize}[label={\textbullet}]
-\item podział danych: mały zbiór uczący (\texttt{30\%}) i duży zbiór testowy (\texttt{70\%}),
-\item sieć o większej pojemności: \texttt{K1 = 8}, \texttt{K2 = 8},
-\item uczenie krokowe: jedna epoka na iterację i rejestracja błędu po każdym kroku,
-\item łączna liczba epok obserwacji: \texttt{150},
-\item monitorowana metryka: \texttt{SSE} oddzielnie dla treningu i testu.
-\end{itemize}
-
-Implementację eksperymentu przedstawiono na listingu \ref{lst:exp5_przeuczenie_py}.
-
-\lstinputlisting[
-language=Python,
-inputencoding=utf8/cp1250,
-firstline=1,
-lastline=220,
-breaklines=true,
-numbers=left,
-frame=single,
-caption={Skrypt eksperymentu nr 5: analiza przeuczenia i early stopping (\texttt{exp5\_przeuczenie.py})},
-label={lst:exp5_przeuczenie_py}
-]{exp5_przeuczenie.py}
-
-Na listingu \ref{lst:exp5_przeuczenie_py} skrypt:
-\begin{itemize}[label={\textbullet}]
-\item przygotowuje trudniejszy scenariusz uczenia (mało danych treningowych, większa sieć),
-\item uczy model epoka po epoce i po każdej epoce zapisuje \texttt{SSE} treningowe,
-\item po każdej epoce oblicza również \texttt{SSE} na zbiorze testowym,
-\item wyznacza epokę minimalnego błędu testowego,
-\item zaznacza ten punkt na wykresie jako rekomendowany moment \texttt{early stopping}.
-\end{itemize}
-
-Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp5_overfitting_curve}.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.9\textwidth]{Fig.5_Przeuczenie_kongres.png}
-\caption{Eksperyment nr 5: przebieg błędu \texttt{SSE} na danych treningowych i testowych w kolejnych epokach}
-\label{fig:exp5_overfitting_curve}
-\end{figure}
-
-Typowy obraz przeuczenia pojawia się wtedy, gdy błąd treningowy stale maleje,
-a błąd testowy po osiągnięciu minimum zaczyna rosnąć. Oznacza to,
-że model coraz lepiej zapamiętuje zbiór uczący, ale traci zdolność uogólniania
-na nowe próbki.
-
-\textbf{Wniosek:} eksperyment nr 5 potwierdza potrzebę kontrolowania procesu uczenia
-za pomocą zbioru walidacyjnego/testowego i stosowania \texttt{early stopping}.
-Najlepszy punkt pracy sieci odpowiada minimum błędu testowego,
-niekoniecznie ostatniej epoce treningu.
 
 
 \section{Podsumowanie i wnioski}

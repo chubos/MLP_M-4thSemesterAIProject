@@ -53,7 +53,7 @@ plt.axhline(0, color='black', linewidth=1)
 plt.xlabel('Kwestia głosowania', fontsize=12)
 plt.ylabel('Spadek skuteczności sieci [%]', fontsize=12)
 plt.ylim(min(spadki_pk) - 1, max(spadki_pk) + 1)
-# Krótkie opisy głosowań na osi X (możesz edytować listę poniżej)
+# Opisy głosowań
 vote_labels = [
     'handicapped-infants', 'water-project-cost-sharing', 'adoption-budget-res',
     'physician-fee-freeze', 'el-salvador-aid', 'religious-groups-in-schools',
