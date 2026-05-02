@@ -12,12 +12,12 @@ X_all = x_norm.T
 Y_all = y_t.T     
 
 # 2. Parametry sieci
-K1_fixed, K2_fixed = 8, 5
+K1_fixed, K2_fixed = 10, 4
 max_epoch = 80
 err_goal = 0.05 
 disp_freq = 10 
 lr_fixed = 1e-4
-mc_fixed = 0.80
+mc_fixed = 0.45
 
 
 X_train_pula, X_test, Y_train_pula, Y_test = train_test_split(
