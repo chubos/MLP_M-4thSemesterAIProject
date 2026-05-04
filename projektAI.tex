@@ -1,5 +1,7 @@
 \documentclass[12pt,twoside]{article}
 \usepackage{weiiszablonzmodyfikowany}
+\usepackage{float}
+\usepackage{placeins}
 
 % Imię i nazwisko autora projektu
 \author{Hubert Lech}
@@ -891,7 +893,7 @@ W eksperymencie przeprowadzono całościową optymalizację wszystkich czterech 
 W badaniu przyjęto następującą konfigurację:
 \begin{itemize}[label={\textbullet}]
 \item przeszukiwane parametry architektury: $K1, K2 \in \{1, 2, \ldots, 10\}$,
-\item przeszukiwane parametry uczenia: $lr \in [10^{-5}, 10^{-2}]$ (skala logarytmiczna, 10 wartości),
+\item przeszukiwane parametry uczenia: $lr \in [10^{-5}, 10^{-2}]$,
 \item przeszukiwane parametry uczenia: $mc \in \{0.05, 0.10, \ldots, 0.95\}$,
 \item stałe warunki uczenia: \texttt{max\_epoch = 400}, \texttt{err\_goal = 0.05},
 \item ocena jakości: średnia skuteczność \texttt{PK [\%]} z \texttt{10}-krotnej walidacji krzyżowej,
@@ -908,162 +910,69 @@ lastline=80,
 breaklines=true,
 numbers=left,
 frame=single,
-caption={Eksperyment nr 5: pełny GridSearch po czterech parametrach},
+caption={Eksperyment nr 5: pe{\l}ny GridSearch po czterech parametrach},
 label={lst:exp5_gridsearch_4d_py}
 ]{exp5_gridsearch_4d.py}
 
-Skrypt uruchamia wyczerpujący GridSearch po wszystkich czterech parametrach, sprawdzając każdą kombinację przy użyciu walidacji krzyżowej. Dla każdej kombinacji zapisywane są uzyskane wyniki, które następnie są sortowane po skuteczności. Wyniki są wizualizowane z różnych perspektyw, co pozwala zrozumieć wpływ poszczególnych parametrów na jakość klasyfikacji.
+GridSearch sprawdza każdą kombinację przy użyciu walidacji krzyżowej. Dla każdej kombinacji zapisywane są uzyskane wyniki, które następnie są sortowane po skuteczności. Wyniki są wizualizowane z różnych perspektyw, co pozwala zrozumieć wpływ poszczególnych parametrów na jakość klasyfikacji.
 
-Wyniki eksperymentu przedstawiono na serii rysunków \ref{fig:exp5_k1k2} -- \ref{fig:exp5_top10}.
 
-\begin{figure}[h!]
+Rysunek \ref{fig:exp5_k1k2} pokazuje wpływ architektury sieci na skuteczność poprzez uśrednienie wyników dla wszystkich kombinacji parametrów uczenia. Pokazuje, które pary neuronów (K1, K2) osiągają najwyższą średnią skuteczność niezależnie od parametrów lr i mc. Analiza tego wykresu pozwala zidentyfikować optymalny zakres rozmiarów warstw ukrytych.
+
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{Fig.5a_GridSearch_K1K2.png}
 \caption{GridSearch: średnia PK w funkcji liczby neuronów w warstwach ukrytych (K1, K2), uśredniona po wszystkich kombinacjach lr i mc}
 \label{fig:exp5_k1k2}
 \end{figure}
 
-Rysunek \ref{fig:exp5_k1k2} pokazuje wpływ architektury sieci na skuteczność poprzez uśrednienie wyników dla wszystkich kombinacji parametrów uczenia. Heatmapa ujawnia, które pary neuronów (K1, K2) osiągają najwyższą średnią skuteczność niezależnie od parametrów lr i mc. Analiza tego wykresu pozwala zidentyfikować optymalny zakres rozmiarów warstw ukrytych.
 
-\begin{figure}[h!]
+
+Rysunek \ref{fig:exp5_lrmc} wizualizuje wpływ wspólpracy współczynnika uczenia i momentum na skuteczność, uśredniając wyniki dla wszystkich konfiguracji architektury. Ten wykres pokazuje, czy istnieje optymalny obszar w przestrzeni parametrów (lr, mc), w którym sieć osiąga najlepsze rezultaty. Pozwala to zrozumieć, które kombinacje parametrów uczenia są najbardziej efektywne.
+
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{Fig.5b_GridSearch_lrmc.png}
 \caption{GridSearch: średnia PK w funkcji parametrów uczenia (lr, mc), uśredniona po wszystkich kombinacjach K1 i K2}
 \label{fig:exp5_lrmc}
 \end{figure}
 
-Rysunek \ref{fig:exp5_lrmc} wizualizuje wpływ wspólpracy współczynnika uczenia i momentum na skuteczność, uśredniając wyniki dla wszystkich konfiguracji architektury. Ten wykres pokazuje, czy istnieje optymalny obszar w przestrzeni parametrów (lr, mc), w którym sieć osiąga najlepsze rezultaty. Pozwala to zrozumieć, które kombinacje parametrów uczenia są najbardziej efektywne.
+Rysunek \ref{fig:exp5_histogram} prezentuje rozkład statystyczny skuteczności dla wszystkich sprawdzonych kombinacji. Analiza tego rozkładu pozwala ocenić, czy większość konfiguracji daje dobre rezultaty, czy też tylko nieliczne kombinacje osiągają wysoką skuteczność, co wskazywałoby na wąskie optimum w przestrzeni hiperparametrów.
 
-\begin{figure}[h!]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{Fig.5c_GridSearch_histogram.png}
 \caption{Rozkład skuteczności PK dla wszystkich 19\,000 kombinacji parametrów}
 \label{fig:exp5_histogram}
 \end{figure}
 
-Rysunek \ref{fig:exp5_histogram} prezentuje rozkład statystyczny skuteczności dla wszystkich sprawdzonych kombinacji. Histogram pokazuje, ile kombinacji osiąga daną skuteczność, oraz wyznacza najlepszy wynik (zaznaczony linią przerywaną). Analiza tego wykresu dostarcza informacji o tym, jak wrażliwa jest sieć na zmianę parametrów: jeśli histogram jest szeroki, oznacza to, że wiele kombinacji prowadzi do różnych rezultatów; jeśli jest skupiony, parametry są mniej istotne.
+Rysunek \ref{fig:exp5_k1_scatter} przedstawia rozkład punktowy wszystkich kombinacji względem K1. Dla każdej wartości K1 pokazane są wszystkie możliwe skuteczności osiągane dla różnych kombinacji pozostałych trzech parametrów. Ten wykres ujawnia, czy liczba neuronów w pierwszej warstwie ukrytej ma duży wpływ na wynik, czy też wpływ jest silnie zależny od innych parametrów.
 
-\begin{figure}[h!]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{Fig.5d_GridSearch_K1_scatter.png}
-\caption{Wpływ liczby neuronów K1 na skuteczność: wszystkie kombinacje parametrów K2, lr i mc}
+\caption{Wpływ liczby neuronów K1 na skuteczność}
 \label{fig:exp5_k1_scatter}
 \end{figure}
 
-Rysunek \ref{fig:exp5_k1_scatter} przedstawia rozkład punktowy wszystkich kombinacji względem K1. Dla każdej wartości K1 pokazane są wszystkie możliwe skuteczności osiągane dla różnych kombinacji pozostałych trzech parametrów. Ten wykres ujawnia, czy liczba neuronów w pierwszej warstwie ukrytej ma stabilny i monototoniczny wpływ na wynik, czy też wpływ jest niesystematyczny i silnie zależny od innych parametrów.
+Rysunek \ref{fig:exp5_k2_scatter} analogicznie do poprzedniego pokazuje rozkład skuteczności w funkcji K2 dla wszystkich kombinacji pozostałych parametrów. Porównanie tego wykresu pozwala ocenić, czy druga warstwa ukryta ma podobny czy różny wpływ na skuteczność w porównaniu z pierwszą warstwą.
 
-\begin{figure}[h!]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth]{Fig.5e_GridSearch_K2_scatter.png}
-\caption{Wpływ liczby neuronów K2 na skuteczność: wszystkie kombinacje parametrów K1, lr i mc}
+\caption{Wpływ liczby neuronów K2 na skuteczność}
 \label{fig:exp5_k2_scatter}
 \end{figure}
 
-Rysunek \ref{fig:exp5_k2_scatter} analogicznie do poprzedniego pokazuje rozkład skuteczności w funkcji K2 dla wszystkich kombinacji pozostałych parametrów. Porównanie tego wykresu z Fig.5d pozwala ocenić, czy druga warstwa ukryta ma podobny czy różny wpływ na skuteczność w porównaniu z pierwszą warstwą.
+\FloatBarrier
 
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.9\textwidth]{Fig.5f_GridSearch_top10.png}
-\caption{Top 10 najlepszych kombinacji wszystkich czterech parametrów (K1, K2, lr, mc) wraz z uzyskaną skutecznością}
-\label{fig:exp5_top10}
-\end{figure}
-
-Rysunek \ref{fig:exp5_top10} przedstawia dziesięć kombinacji parametrów, które osiągnęły najwyższą skuteczność. Dla każdej z nich wyświetlone są wartości wszystkich czterech parametrów. Ten wykres stanowi podsumowanie eksperymentu, wskazując na konkretne wartości, którymi należy się posłużyć do osiągnięcia najlepszych rezultatów. Analiza top 10 wyników pokazuje również, jak stabilne są optymalne parametry: jeśli top 10 kombinacji są bardzo zbliżone, to istnieje wyraźne optimum; jeśli się różnią, to przestrzeń hiperparametrów zawiera wiele lokalnych maksimów o zbliżonej wartości.
-
-Eksperyment pozwolił na identyfikację absolutnie optymalnej kombinacji parametrów poprzez systematyczne przeszukanie całej przestrzeni hiperparametrów. Wyniki pokazują, które parametry mają największy wpływ na ostateczną skuteczność klasyfikacji, oraz czy optymalizacja wszystkich czterech parametrów jednocześnie prowadzi do istotnej poprawy skuteczności w porównaniu z poprzednimi eksperymentami.
+Najlepszą konfigurację uzyskano dla \texttt{K1 = 7}, \texttt{K2 = 1}, \texttt{lr = 0.0001} oraz \texttt{mc = 0.35}. Dla tej kombinacji model osiągnął skuteczność \texttt{PK = 97,01\%}, co stanowi najlepszy wynik całego eksperymentu.
 
 \section{Podsumowanie i wnioski}
 
-W ramach projektu zrealizowano i przeanalizowano sieć neuronową MLP z trzema warstwami (dwie ukryte, jedna wyjściowa) do klasyfikacji głosowań kongresowych. Przeprowadzono pięć eksperymentów mających na celu optymalizację architektury sieci oraz parametrów uczenia.
+W projekcie zbudowano i przeanalizowano sieć MLP do klasyfikacji głosowań kongresowych, a uzyskane wyniki pokazały, że model osiąga bardzo wysoką skuteczność przy odpowiednio dobranych hiperparametrach. Najlepszy rezultat wyniósł \texttt{97,01\%} i został osiągnięty dla konfiguracji \texttt{K1 = 7}, \texttt{K2 = 1}, \texttt{lr = 0.0001} oraz \texttt{mc = 0.35}. Oznacza to, że dla tego zadania korzystniejsza jest architektura z większą pierwszą warstwą ukrytą i małą drugą warstwą.
 
-\paragraph{}Podsumowując cały projekt: celem było zbudowanie kompletnego, przejrzystego i reprodukowalnego rozwiązania MLP do zadania klasyfikacji przynależności partyjnej na podstawie 16 głosowań. Wykonano pełny pipeline — przygotowanie i kodowanie danych, ich zapis w formacie Hickle, implementację własnej sieci MLP z dwoma warstwami ukrytymi oraz szeroki zestaw eksperymentów optymalizacyjnych (architektura, hiperparametry, analiza cech, wpływ rozmiaru zbioru, oraz wyczerpujący GridSearch po czterech parametrach). Uzyskane wyniki (około 96\% skuteczności) wskazują, że klasyczny MLP, odpowiednio skonfigurowany, daje wysoką jakość klasyfikacji i dobrą zdolność uogólniania. Analiza ważności cech potwierdziła, że nie wszystkie głosowania mają równą wagę informacyjną, a model poprawnie wykorzystuje najbardziej rozróżniające atrybuty. Główne ograniczenia to stosunkowo niewielki rozmiar dostępnego zbioru danych oraz potencjalna niereprezentatywność historycznych głosowań; dlatego dalsze prace powinny skupić się na porównaniu z innymi metodami klasyfikacji, wprowadzeniu technik regularyzacji, eksperymentach z różnymi funkcjami aktywacji i inicjalizacją wag oraz na analizie przypadków trudnych do klasyfikacji. Ogólnie projekt potwierdza, że systematyczne podejście do projektowania architektury i strojenia hiperparametrów pozwala osiągnąć stabilne i konkurencyjne rezultaty nawet dla klasycznych modeli sieci neuronowych.
-
-\subsection{Wnioski z poszczególnych eksperymentów}
-
-\subsubsection{Eksperyment 1 -- Optymalizacja liczby neuronów (K1, K2)}
-
-W pierwszym eksperymencie przeszukano wszystkie kombinacje liczby neuronów w obu warstwach ukrytych w zakresie $\{1, 2, \ldots, 10\}$. Uzyskana maksymalna skuteczność wyniosła \texttt{96,08\%} dla konfiguracji \texttt{K1 = 10}, \texttt{K2 = 4}. 
-
-\textbf{Wnioski:}
-\begin{itemize}[label={\textbullet}]
-\item Liczba neuronów w warstwie pierwszej ma silny wpływ na skuteczność -- wartości wyższe (K1 > 8) osiągają lepsze rezultaty.
-\item Druga warstwa ukryta może być znacznie mniejsza -- optymalnie \texttt{K2 = 4}, co sugeruje że praca kompresji reprezentacji jest dobrze podzielona między warstwy.
-\item Architektura asymetryczna (10-4) okazała się lepsza niż symetryczne konfiguracje.
-\end{itemize}
-
-\subsubsection{Eksperyment 2 -- Optymalizacja parametrów uczenia (lr, mc)}
-
-Drugi eksperyment przeszukał współczynnik uczenia w zakresie logarytmicznym $[10^{-5}, 10^{-2}]$ oraz momentum w zakresie $[0.05, 0.95]$. Uzyskana maksymalna skuteczność wyniosła \texttt{96,54\%} dla \texttt{lr = 0.0001}, \texttt{mc = 0.45}.
-
-\textbf{Wnioski:}
-\begin{itemize}[label={\textbullet}]
-\item Współczynnik uczenia powinien być konserwatywny -- zbyt duże wartości (lr > 1e-3) destabilizują proces uczenia i prowadzą do spadku skuteczności.
-\item Parametr momentum nie powinien być zbyt duży -- wartość \texttt{mc = 0.45} jest niższa niż typowo stosowane wartości (0.9-0.95), co wskazuje na specyficzne cechy tego problemu.
-\item Istnieje optymalny obszar parametrów, poza którym model traci stabilność.
-\end{itemize}
-
-\subsubsection{Eksperyment 3 -- Analiza ważności cech}
-
-Trzeci eksperyment badał wpływ poszczególnych 16 głosowań na ostateczną decyzję sieci. Przeprowadzono analizę poprzez neutralizację każdej cechy i obserwację spadku skuteczności.
-
-\textbf{Wnioski:}
-\begin{itemize}[label={\textbullet}]
-\item Głosowania nie mają równomiernego wpływu -- niektóre cechy (np. \texttt{physician-fee-freeze}) są znacznie ważniejsze niż inne.
-\item Największy spadek skuteczności (ok. 4.1\%) obserwuje się dla głosowań najbardziej spolaryzowanych między demokratami i republikanami.
-\item Model prawidłowo identyfikuje istotne różnice między partiami politycznymi.
-\end{itemize}
-
-\subsubsection{Eksperyment 4 -- Wpływ rozmiaru zbioru uczącego}
-
-Czwarty eksperyment analizował wpływ liczby danych treningowych na zdolność uogólniania. Testowano z ustałym zbiorem testowym (20\%) i rosnącymi podzbiorami treningowymi.
-
-\textbf{Wnioski:}
-\begin{itemize}[label={\textbullet}]
-\item Skuteczność testowa wyraźnie rośnie z liczbą próbek uczących.
-\item Krzywa uczenia stabilizuje się po osiągnięciu pewnego progu (ok. 60-70\% dostępnych danych), sugerując że dodatkowe próbki mają coraz mniejszy wpływ.
-\item Model nie wykazuje objawów przeuczenia -- skuteczność testowa nie spada mimo zwiększania liczby danych treningowych.
-\end{itemize}
-
-\subsubsection{Eksperyment 5 -- Pełny GridSearch (K1, K2, lr, mc)}
-
-Piąty eksperyment przeprowadził wyczerpujący GridSearch po wszystkich czterech parametrach, sprawdzając 19\,000 kombinacji. Wykresy z różnych perspektyw ujawniły:
-
-\textbf{Wnioski:}
-\begin{itemize}[label={\textbullet}]
-\item Heatmapy (Fig.5a i Fig.5b) pokazują wyraźne optimum -- istnieje konkretny obszar w przestrzeni hiperparametrów gdzie sieć osiąga najlepsze rezultaty.
-\item Histogram rozkładu PK (Fig.5c) jest skoncentrowany wokół wartości 90-96\%, co wskazuje na dużą stabilność modelu wobec zmian parametrów.
-\item Scatter ploty (Fig.5d, Fig.5e) ujawniają, że K1 ma bardziej konsekwentny wpływ na wynik niż K2 -- rozkład jest bardziej skoncentrowany dla wyższych wartości K1.
-\item Top 10 kombinacji (Fig.5f) skupia się wokół kilku konkretnych wartości, potwierdzając że optymum nie jest unikalne, ale znajduje się w dobrze zdefiniowanym obszarze.
-\end{itemize}
-
-\subsection{Wnioski ogólne}
-
-\begin{enumerate}
-\item \textbf{Optymalna architektura}: Sieć 16-10-4-1 (z dwoma warstwami ukrytymi 10 i 4 neuronów) osiąga najlepsze rezultaty dla tego problemu.
-
-\item \textbf{Optymalne parametry uczenia}: Współczynnik uczenia $lr = 10^{-4}$ i momentum $mc = 0.45$ zapewniają stabilny proces uczenia bez oscylacji i przeuczenia.
-
-\item \textbf{Maksymalna skuteczność}: Po optymalizacji wszystkich czterech parametrów udało się osiągnąć skuteczność klasyfikacji na poziomie \textbf{96,54\%} w walidacji krzyżowej, co stanowi wynik zadowalający dla tego zagadnienia.
-
-\item \textbf{Wrażliwość modelu}: Model jest względnie stabilny wobec zmian parametrów -- większość kombinacji osiąga skuteczność w zakresie 90-95\%, co sugeruje że problem jest dobrze scharakteryzowany przez wybraną architekturę.
-
-\item \textbf{Znaczenie cechy}: Analiza ważności cech potwierdziła że głosowania są rzeczywiście zróżnicowane w swoim wpływie na przynależność partyjną kongresmena, a sieć prawidłowo identyfikuje te różnice.
-
-\item \textbf{Generalizacja}: Krzywa uczenia pokazuje że model dobrze uogólnia na nowych danych, bez objawów przeuczenia nawet przy pełnym zbiorze treningowym.
-
-\item \textbf{Metodologia}: Systematyczne podejście do optymalizacji (GridSearch po pojedynczych parametrach, a następnie po wszystkich jednocześnie) pozwoliło na identyfikację globalnie optymalnej konfiguracji i zrozumienie wpływu każdego parametru na wynik.
-
-\end{enumerate}
-
-\subsection{Możliwe kierunki dalszych badań}
-
-\begin{itemize}[label={\textbullet}]
-\item Eksperymentowanie z innymi funkcjami aktywacji (ReLU, Sigmoid) w celu porównania z tanh.
-\item Zastosowanie technik regularyzacji (L1/L2, dropout) w celu zredukowania ryzyka przeuczenia na większych sieciach.
-\item Badanie wpływu różnych schematów inicjalizacji wag na proces uczenia.
-\item Porównanie z innymi algorytmami klasyfikacji (SVM, Random Forest, Gradient Boosting) w celu oceny względnej wydajności MLP.
-\item Analiza błędów klasyfikacji -- poznanie które próbki są najtrudniejsze do prawidłowej klasyfikacji.
-\end{itemize}
+Wyniki eksperymentów pokazały też, że sieć bardzo często osiągała wysokie wartości skuteczności, a histogram rozkładu wyników był wyraźnie skupiony, a nie rozrzucony. Taki obraz sugeruje, że model nie jest silnie podatny na drobne zmiany parametrów i zachowuje stabilność w szerokim obszarze przestrzeni hiperparametrów. Całość potwierdza więc, że dobrze dobrany MLP może być skutecznym i odpornym na zakłócenia rozwiązaniem dla tego problemu klasyfikacji.
 
 
 \clearpage
@@ -1071,17 +980,12 @@ Piąty eksperyment przeprowadził wyczerpujący GridSearch po wszystkich czterec
 \addcontentsline{toc}{section}{Literatura}
 
 \begin{thebibliography}{9}
-\bibitem{str} http://weii.portal.prz.edu.pl/pl/materialy-do-pobrania. Dostęp 5.01.2015.
 \bibitem{uciVoting} Congressional Voting Records. UCI Machine Learning Repository, 
 \texttt{https://archive.ics.uci.edu/dataset/105/congressional+voting+records}. Dostęp 21.03.2026.
 \bibitem{geronML} Geron A.: Uczenie maszynowe z użyciem Scikit-Learn, Keras i TensorFlow. Helion.
 \bibitem{wikiMCP} Neuron McCullocha-Pittsa, Wikipedia Polska. \url{https://pl.wikipedia.org/wiki/Neuron_McCullocha-Pittsa}. Dostęp 21.03.2026.
 \bibitem{zajdelLab} Zajdel R.: Sztuczna inteligencja, Laboratorium. \url{https://materialy.kia.prz.edu.pl/pracownik/pliki/34/\%C4\%86WICZENIE\%208.1.pdf}. Dostęp 21.03.2026.
 \bibitem{zajdelLab9} Zajdel R.: Sztuczna inteligencja, Laboratorium. \url{https://materialy.kia.prz.edu.pl/pracownik/pliki/34/\%C4\%86WICZENIE\%209.pdf}. Dostęp 21.03.2026.
-\bibitem{Jakubczyk1997} Jakubczyk T., Klette A.: Pomiary w akustyce. WNT, Warszawa 1997.
-\bibitem{Barski2011} Barski S.: Modele transmitancji. Elektronika praktyczna, nr 7/2011, str. 15-18.
-\bibitem{dokum} Czujnik S200. Dokumentacja techniczno-ruchowa. Lumel, Zielona Góra, 2001.
-\bibitem{Pawluk2001} Pawluk K.: Jak pisać teksty techniczne poprawnie, Wiadomości Elektrotechniczne, Nr 12, 2001, str. 513-515.
 \end{thebibliography}
 
 \end{document} 
