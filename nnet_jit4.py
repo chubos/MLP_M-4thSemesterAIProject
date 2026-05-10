@@ -47,27 +47,9 @@ def sumsqr(a):
     return sumSq 
 
 @njit((int32,int32),fastmath=True)
-def rands(a, b): 
-    w = randX(a, b) * 2.0 - 1.0 
-    b = randX(a, 1) * 2.0 - 1.0 
-    return w, b 
-
-@njit((int32,int32),fastmath=True)
 def nwtan(s, p): 
     magw = 0.7 * s ** (1.0 / p) 
     w = magw * normRows(randn(s,p)) 
-    b = magw * randn(s,1) 
-    rng = np.zeros((1, p)) 
-    rng = rng + 2.0 
-    mid = np.zeros((p, 1)) 
-    w = 2.0 * w / np.dot(np.ones((s,1)), rng) 
-    b = b - np.dot(w, mid) 
-    return w, b 
-
-@njit((int32,int32),fastmath=True)
-def nwlog(s, p): 
-    magw = 2.8 * s ** (1.0 / p) 
-    w = magw * normRows(randn(s,p))
     b = magw * randn(s,1) 
     rng = np.zeros((1, p)) 
     rng = rng + 2.0 
@@ -87,23 +69,6 @@ def tansig(n, b):
             if np.abs(v) == np.inf: 
                 a[x, y] = np.sign(n[x, y]) 
     return a 
-            
-@njit(fastmath=True)
-def logsig(n, b): 
-    n = n + b 
-    a = 1.0 / (1.0 + np.exp(-n)) 
-    rows, columns = a.shape 
-    for x in range(0, rows): 
-        for y in range(0, columns): 
-            v = a[x, y] 
-            if np.abs(v) == np.inf: 
-                a[x, y] = np.sign(n[x, y]) 
-    return a 
-            
-@njit(fastmath=True)
-def purelin(n, b): 
-    a = n + b 
-    return a 
 
 @njit(fastmath=True)
 def deltatan(a, d, w=None):
@@ -111,19 +76,6 @@ def deltatan(a, d, w=None):
         return (1.0 - (a * a)) * d
     else:
         return (1.0 - (a * a)) * np.dot(w.T, d)
-
-
-@njit(fastmath=True)
-def deltalog(a, d, *w): 
-    if not w:
-        d = a * (1.0 - a) * d 
-    else:
-        d = a * (1.0 - a) * np.dot(np.transpose(w[0]), d)
-    return d 
-
-@njit(fastmath=True)
-def deltalin(a, d): 
-    return d 
 
 @njit(fastmath=True)
 def learnbp(p, d, lr): 

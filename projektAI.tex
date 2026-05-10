@@ -577,7 +577,7 @@ W praktyce często przyjmuje się $m_c\approx 0{,}9$--$0{,}95$, co zwykle zwięk
 Implementację modelu wydzielono do osobnego modułu. Taki podział upraszcza prowadzenie eksperymentów. Jest to baza, która umożliwia utworzenie różnych wersji sieci bez powielania kodu odpowiedzialnego za sam algorytm uczenia.
 
 \subsection{Klasa implementująca sieć MLP}
-Głównym komponentem odpowiedzialnym za architekturę i logikę sieci neuronowej jest moduł opisany listingiem \ref{lst:mlp_core_py}, w którym zdefiniowano klasę implementującą sieć MLP. Zawiera ona strukturę wielowarstwowego perceptronu składającą się z dwóch warstw ukrytych oraz jednej warstwy wyjściowej. Moduł ten zapewnia środowisko do pracy z modelem, obejmujące procesy inicjalizacji wag i biasów oraz algorytmy uczenia oparte na wstecznej propagacji błędu z mechanizmem momentum. Całość implementacji została zoptymalizowana pod kątem obliczeniowym poprzez wykorzystanie zewnętrznych funkcji pomocniczych, które wspierają operacje matematyczne i aktualizację parametrów sieci.
+Głównym komponentem odpowiedzialnym za architekturę i logikę sieci neuronowej jest moduł opisany listingiem \ref{lst:mlp_core_py}, w którym zdefiniowano klasę implementującą sieć MLP. Zawiera ona strukturę wielowarstwowego perceptronu składającą się z jednej warstwy wejściowej, jednej warstwy ukrytej oraz jednej warstwy wyjściowej. Moduł ten zapewnia środowisko do pracy z modelem, obejmujące procesy inicjalizacji wag i biasów oraz algorytmy uczenia oparte na wstecznej propagacji błędu z mechanizmem momentum. Całość implementacji została zoptymalizowana pod kątem obliczeniowym poprzez wykorzystanie zewnętrznych funkcji pomocniczych, które wspierają operacje matematyczne i aktualizację parametrów sieci.
 
 \lstinputlisting[
 language=Python,
@@ -644,11 +644,6 @@ W modelu klasy MLP wykorzystywane są następujące funkcje:
 Inicjalizacja wag i biasów dla warstw ukrytych z aktywacją \texttt{tansig}.
 Funkcja tworzy rozkład startowych wag o skali dopasowanej do liczby wejść i neuronów,
 co poprawia stabilność pierwszych epok uczenia.
-
-\item \texttt{rands(a, b)}:
-Losowa inicjalizacja warstwy wyjściowej (wagi i biasy).
-Ponieważ w tym modelu również warstwa wyjściowa korzysta z aktywacji \texttt{tansig},
-na starcie wystarcza prosta inicjalizacja losowa z zakresu \texttt{[-1, 1]}.
 
 \item \texttt{tansig(n, b)}:
 Funkcja aktywacji \texttt{tanh} dla wszystkich warstw sieci, w tym warstwy wyjściowej.
