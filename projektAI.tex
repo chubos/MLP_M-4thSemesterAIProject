@@ -397,7 +397,7 @@ W ten sposób kolejne epoki uczenia prowadzą do stopniowego zmniejszania błęd
 
 \subsection{Sieci neuronowe jednokierunkowe wielowarstwowe}
 
-W sieci jednokierunkowej wielowarstwowej każda warstwa ma własną macierz wag $\mathbf{W}^{(l)}$, wektor przesunięć $\mathbf{b}^{(l)}$, funkcję aktywacji $f^{(l)}(\cdot)$ oraz wektor wyjściowy $\mathbf{y}^{(l)}$. W analizowanym modelu występują dwie warstwy ukryte oraz jedna warstwa wyjściowa, oznaczone odpowiednio jako $1,2,3$. Propagacja sygnału przebiega więc od wejścia do wyjścia \cite{zajdelLab9}.
+W sieci jednokierunkowej wielowarstwowej każda warstwa ma własną macierz wag $\mathbf{W}^{(l)}$, wektor przesunięć $\mathbf{b}^{(l)}$, funkcję aktywacji $f^{(l)}(\cdot)$ oraz wektor wyjściowy $\mathbf{y}^{(l)}$. W analizowanym modelu występują jedna warstwa wejściowa, jedna warstwa ukryta oraz jedna warstwa wyjściowa, oznaczone odpowiednio jako $1,2,3$. Propagacja sygnału przebiega więc od wejścia do wyjścia \cite{zajdelLab9}.
 
 \begin{figure}[h!]
 \centering
@@ -434,25 +434,28 @@ przy czym $\mathbf{y}^{(0)}=\mathbf{x}$ oraz dla pierwszej warstwy $K_0=L$.
 
 Dla wyjścia trzeciej warstwy i sygnału zadanego $\hat{\mathbf{y}}^{(3)}$ funkcję błędu SSE zapisujemy jako:
 \begin{equation}
-E = SSE = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)^2.
+E = SSE = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(y_{i_3}^{(3)}-\hat{y}_{i_3}^{(3)}\right)^2.
 \end{equation}
 
 Po podstawieniu kolejnych warstw (łańcuchowo) otrzymuje się rozwiniętą zależność:
 \begin{equation}
-E = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(\hat{y}^{(3)}_{i_3}-f^{(3)}\!\left(\sum_{i_2=1}^{K_2} w_{i_3 i_2}^{(3)}
+E = \frac{1}{2}\sum_{i_3=1}^{K_3}\left(
+f^{(3)}\!\left(\sum_{i_2=1}^{K_2} w_{i_3 i_2}^{(3)}
 f^{(2)}\!\left(\sum_{i_1=1}^{K_1} w_{i_2 i_1}^{(2)}
-f^{(1)}\!\left(\sum_{j=1}^{L} w_{i_1 j}^{(1)}x_j + b_{i_1}^{(1)}\right)+ b_{i_2}^{(2)}\right)+ b_{i_3}^{(3)}\right)\right)^2.
+f^{(1)}\!\left(\sum_{j=1}^{L} w_{i_1 j}^{(1)}x_j + b_{i_1}^{(1)}\right)+ b_{i_2}^{(2)}\right)
++ b_{i_3}^{(3)}\right)
+-\hat{y}_{i_3}^{(3)}\right)^2.
 \end{equation}
 
 W warstwie wyjściowej składnik gradientu względem wagi wyznacza się z reguły łańcuchowej:
 \begin{equation}
 \frac{\partial E}{\partial w^{(3)}_{i_3 i_2}}
-= \frac{\partial E}{\partial y^{(3)}_{i_3}}
-\frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}
-\frac{\partial z^{(3)}_{i_3}}{\partial w^{(3)}_{i_3 i_2}}
-= \left(y^{(3)}_{i_3}-\hat{y}^{(3)}_{i_3}\right)
-f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
-y^{(2)}_{i_2}.
+= \frac{\partial E}{\partial y_{i_3}^{(3)}}
+\frac{\partial y_{i_3}^{(3)}}{\partial z_{i_3}^{(3)}}
+\frac{\partial z_{i_3}^{(3)}}{\partial w^{(3)}_{i_3 i_2}}
+= \left(y_{i_3}^{(3)}-\hat{y}_{i_3}^{(3)}\right)
+f'^{(3)}\!\left(z_{i_3}^{(3)}\right)
+y_{i_2}^{(2)}.
 \end{equation}
 
 Dla warstwy drugiej (ukrytej) dostajemy:
@@ -460,17 +463,17 @@ Dla warstwy drugiej (ukrytej) dostajemy:
 \begin{aligned}
 \frac{\partial E}{\partial w^{(2)}_{i_2 i_1}}
 &= \sum_{i_3=1}^{K_3}
-\frac{\partial E}{\partial y^{(3)}_{i_3}}
-\frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}
-\frac{\partial z^{(3)}_{i_3}}{\partial y^{(2)}_{i_2}}
-\frac{\partial y^{(2)}_{i_2}}{\partial z^{(2)}_{i_2}}
-\frac{\partial z^{(2)}_{i_2}}{\partial w^{(2)}_{i_2 i_1}} \\
+\frac{\partial E}{\partial y_{i_3}^{(3)}}
+\frac{\partial y_{i_3}^{(3)}}{\partial z_{i_3}^{(3)}}
+\frac{\partial z_{i_3}^{(3)}}{\partial y_{i_2}^{(2)}}
+\frac{\partial y_{i_2}^{(2)}}{\partial z_{i_2}^{(2)}}
+\frac{\partial z_{i_2}^{(2)}}{\partial w^{(2)}_{i_2 i_1}} \\
 &= \sum_{i_3=1}^{K_3}
-\left(y^{(3)}_{i_3}-\hat{y}^{(3)}_{i_3}\right)
-f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
+\left(y_{i_3}^{(3)}-\hat{y}_{i_3}^{(3)}\right)
+f'^{(3)}\!\left(z_{i_3}^{(3)}\right)
 w^{(3)}_{i_3 i_2}
-f'^{(2)}\!\left(z^{(2)}_{i_2}\right)
-y^{(1)}_{i_1}.
+f'^{(2)}\!\left(z_{i_2}^{(2)}\right)
+y_{i_1}^{(1)}.
 \end{aligned}
 \end{equation}
 
@@ -479,72 +482,47 @@ Dla pierwszej warstwy analogicznie:
 \begin{aligned}
 \frac{\partial E}{\partial w^{(1)}_{i_1 j}}
 &= \sum_{i_3=1}^{K_3}
-\frac{\partial E}{\partial y^{(3)}_{i_3}}
-\frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}
+\frac{\partial E}{\partial y_{i_3}^{(3)}}
+\frac{\partial y_{i_3}^{(3)}}{\partial z_{i_3}^{(3)}}
 \sum_{i_2=1}^{K_2}
-\frac{\partial z^{(3)}_{i_3}}{\partial y^{(2)}_{i_2}}
-\frac{\partial y^{(2)}_{i_2}}{\partial z^{(2)}_{i_2}}
-\frac{\partial z^{(2)}_{i_2}}{\partial y^{(1)}_{i_1}}
-\frac{\partial y^{(1)}_{i_1}}{\partial z^{(1)}_{i_1}}
-\frac{\partial z^{(1)}_{i_1}}{\partial w^{(1)}_{i_1 j}} \\
+\frac{\partial z_{i_3}^{(3)}}{\partial y_{i_2}^{(2)}}
+\frac{\partial y_{i_2}^{(2)}}{\partial z_{i_2}^{(2)}}
+\frac{\partial z_{i_2}^{(2)}}{\partial y_{i_1}^{(1)}}
+\frac{\partial y_{i_1}^{(1)}}{\partial z_{i_1}^{(1)}}
+\frac{\partial z_{i_1}^{(1)}}{\partial w^{(1)}_{i_1 j}} \\
 &= \sum_{i_3=1}^{K_3}
-\left(y^{(3)}_{i_3}-\hat{y}^{(3)}_{i_3}\right)
-f'^{(3)}\!\left(z^{(3)}_{i_3}\right)
+\left(y_{i_3}^{(3)}-\hat{y}_{i_3}^{(3)}\right)
+f'^{(3)}\!\left(z_{i_3}^{(3)}\right)
 \sum_{i_2=1}^{K_2}
 w^{(3)}_{i_3 i_2}
-f'^{(2)}\!\left(z^{(2)}_{i_2}\right)
 w^{(2)}_{i_2 i_1}
-f'^{(1)}\!\left(z^{(1)}_{i_1}\right)
+f'^{(2)}\!\left(z_{i_2}^{(2)}\right)
+f'^{(1)}\!\left(z_{i_1}^{(1)}\right)
 x_j.
 \end{aligned}
 \end{equation}
 
-Po wprowadzeniu oznaczeń sygnałów błędu:
-\begin{equation}
-\delta^{(3)}_{i_3} = \left(\hat{y}^{(3)}_{i_3}-y^{(3)}_{i_3}\right)f'^{(3)}\!\left(z^{(3)}_{i_3}\right),
-\end{equation}
-\begin{equation}
-\delta^{(2)}_{i_2} = \left(\sum_{i_3=1}^{K_3} w^{(3)}_{i_3 i_2}\,\delta^{(3)}_{i_3}\right)f'^{(2)}\!\left(z^{(2)}_{i_2}\right),
-\end{equation}
-\begin{equation}
-\delta^{(1)}_{i_1} = \left(\sum_{i_2=1}^{K_2} w^{(2)}_{i_2 i_1}\,\delta^{(2)}_{i_2}\right)f'^{(1)}\!\left(z^{(1)}_{i_1}\right),
-\end{equation}
-otrzymujemy równoważne postacie skrócone:
+W celu skrócenia zapisu wprowadza się sygnały błędu dla kolejnych warstw:
 \begin{equation}
 \begin{aligned}
-\frac{\partial E}{\partial w^{(3)}_{i_3 i_2}} &= -\delta^{(3)}_{i_3}y^{(2)}_{i_2},
-\qquad
-\frac{\partial E}{\partial w^{(2)}_{i_2 i_1}} = -\delta^{(2)}_{i_2}y^{(1)}_{i_1},\\
-\frac{\partial E}{\partial w^{(1)}_{i_1 j}} &= -\delta^{(1)}_{i_1}x_j.
+\delta^{(3)}_{i_3} &= \left(y_{i_3}^{(3)}-\hat{y}_{i_3}^{(3)}\right)\,f'^{(3)}\!\left(z_{i_3}^{(3)}\right),\\
+\delta^{(2)}_{i_2} &= \left(\sum_{i_3=1}^{K_3} w^{(3)}_{i_3 i_2}\,\delta^{(3)}_{i_3}\right)\,f'^{(2)}\!\left(z_{i_2}^{(2)}\right),\\
+\delta^{(1)}_{i_1} &= \left(\sum_{i_2=1}^{K_2} w^{(2)}_{i_2 i_1}\,\delta^{(2)}_{i_2}\right)\,f'^{(1)}\!\left(z_{i_1}^{(1)}\right).
 \end{aligned}
 \end{equation}
 
-W praktyce zmiany wag zapisuje się więc bezpośrednio przez sygnały błędu:
+Wtedy pochodne względem wag i biasów mają zwarte postacie:
 \begin{equation}
-\Delta w^{(3)}_{i_3 i_2} = \eta\,\delta^{(3)}_{i_3}y^{(2)}_{i_2},
+\frac{\partial E}{\partial w^{(l)}_{i_l i_{l-1}}} = \delta^{(l)}_{i_l}\,y_{i_{l-1}}^{(l-1)},
 \qquad
-\Delta w^{(2)}_{i_2 i_1} = \eta\,\delta^{(2)}_{i_2}y^{(1)}_{i_1},
-\qquad
-\Delta w^{(1)}_{i_1 j} = \eta\,\delta^{(1)}_{i_1}x_j.
+\frac{\partial E}{\partial b^{(l)}_{i_l}} = \delta^{(l)}_{i_l}.
 \end{equation}
 
-Gradienty względem przesunięć wynikają bezpośrednio z reguły łańcuchowej:
+Aktualizację parametrów realizuje się metodą największego spadku:
 \begin{equation}
-\frac{\partial E}{\partial b^{(3)}_{i_3}} = \frac{\partial E}{\partial y^{(3)}_{i_3}}\frac{\partial y^{(3)}_{i_3}}{\partial z^{(3)}_{i_3}}\frac{\partial z^{(3)}_{i_3}}{\partial b^{(3)}_{i_3}} = -\delta^{(3)}_{i_3},
-\end{equation}
-\begin{equation}
-\frac{\partial E}{\partial b^{(2)}_{i_2}} = -\delta^{(2)}_{i_2},
+w^{(l)}_{i_l i_{l-1}}(t+1)=w^{(l)}_{i_l i_{l-1}}(t)-\eta\,\frac{\partial E}{\partial w^{(l)}_{i_l i_{l-1}}}(t),
 \qquad
-\frac{\partial E}{\partial b^{(1)}_{i_1}} = -\delta^{(1)}_{i_1}.
-\end{equation}
-
-Analogicznie dla biasów otrzymujemy aktualizacje:
-\begin{equation}
-\Delta b^{(3)}_{i_3} = \eta\,\delta^{(3)}_{i_3},
-\qquad
-\Delta b^{(2)}_{i_2} = \eta\,\delta^{(2)}_{i_2},
-\qquad
-\Delta b^{(1)}_{i_1} = \eta\,\delta^{(1)}_{i_1}.
+b^{(l)}_{i_l}(t+1)=b^{(l)}_{i_l}(t)-\eta\,\frac{\partial E}{\partial b^{(l)}_{i_l}}(t).
 \end{equation}
 
 Powyższe zależności odpowiadają klasycznemu algorytmowi backpropagation dla sieci wielowarstwowej \cite{zajdelLab9}.

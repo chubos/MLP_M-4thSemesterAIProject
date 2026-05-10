@@ -35,7 +35,7 @@ try:
     party_counts = df['partia'].value_counts().reindex(party_order).fillna(0).astype(int)
     party_pct = (party_counts / party_counts.sum()) * 100
 
-    plt.figure(figsize=(5, 4.5))
+    plt.figure(figsize=(8, 7))
     bars = plt.bar(
         ['Demokraci', 'Republikanie'],
         party_pct.values,
@@ -51,7 +51,7 @@ try:
             f"{pct:.1f}%\n(n={cnt})",
             ha='center',
             va='bottom',
-            fontsize=11
+            fontsize=14
         )
 
     plt.ylabel('Udział rekordów (%)')
