@@ -14,7 +14,7 @@ Y_all = y_t.T
 # 2. Parametry sieci
 K1_fixed, K2_fixed = 10, 4
 max_epoch = 80
-err_goal = 0.05 
+err_goal = 1
 disp_freq = 10 
 lr_fixed = 1e-4
 mc_fixed = 0.45

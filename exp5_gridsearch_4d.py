@@ -12,7 +12,7 @@ x, y_t, x_norm, x_n_s, y_t_s = hkl.load('kongres.hkl')
 x = x_norm
 
 max_epoch = 400
-err_goal = 0.05 
+err_goal = 1 
 disp_freq = 10 
 
 K1_vec = np.arange(1, 11, 1)

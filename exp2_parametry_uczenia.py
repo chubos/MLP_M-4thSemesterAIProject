@@ -12,7 +12,7 @@ x = x_norm
 K1_fixed = 10
 K2_fixed = 4
 max_epoch = 400
-err_goal = 0.05 
+err_goal = 1
 disp_freq = 10 
 
 lr_vec = np.logspace(-5, -2, 10) 
