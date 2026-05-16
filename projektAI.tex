@@ -339,7 +339,7 @@ Uczenie pod nadzorem zakłada, że każdemu wektorowi wejściowemu $\mathbf{x}$ 
 \end{equation}
 Para $\mathbf{x},\hat{\mathbf{y}}$ stanowi więc jedną próbkę uczącą, na podstawie której sieć koryguje swoje parametry. Jeżeli sieć nie jest jeszcze nauczona, jej odpowiedź $\mathbf{y}$ różni się od wartości oczekiwanej $\hat{\mathbf{y}}$, co prowadzi do powstania błędu:
 \begin{equation}
-\mathbf{e} = \hat{\mathbf{y}} - \mathbf{y}.
+\mathbf{e} = \mathbf{y} - \hat{\mathbf{y}}.
 \end{equation}
 
 Zadaniem procesu uczenia jest takie modyfikowanie wag i biasów, aby odpowiedź sieci $\mathbf{y}$ możliwie dobrze pokrywała się z odpowiedzią wzorcową $\hat{\mathbf{y}}$. Najczęściej sprowadza się to do minimalizacji funkcji celu, którą w tym przypadku przyjmuje się jako sumaryczny błąd kwadratowy $SSE$:
@@ -570,7 +570,7 @@ M_{b_i}(t)=b_i(t)-b_i(t-1).
 \end{equation}
 
 
-W praktyce często przyjmuje się $m_c\approx 0{,}9$--$0{,}95$, co zwykle zwiększa szybkość uczenia i ogranicza oscylacje podczas minimalizacji funkcji celu \cite{zajdelLab}.
+W praktyce często przyjmuje się $m_c\approx 0{,}9$--$0{,}95$, co zwykle zwiększa szybkość uczenia i ogranicza oscylacje podczas minimalizacji funkcji celu \cite{zajdelLabm}.
 
 \section{Implementacja sieci neuronowej}
 
@@ -957,8 +957,9 @@ Wyniki eksperymentów pokazały też, że sieć bardzo często osiągała wysoki
 \texttt{https://archive.ics.uci.edu/dataset/105/congressional+voting+records}. Dostęp 21.03.2026.
 \bibitem{geronML} Geron A.: Uczenie maszynowe z użyciem Scikit-Learn, Keras i TensorFlow. Helion.
 \bibitem{wikiMCP} Neuron McCullocha-Pittsa, Wikipedia Polska. \url{https://pl.wikipedia.org/wiki/Neuron_McCullocha-Pittsa}. Dostęp 21.03.2026.
-\bibitem{zajdelLab} Zajdel R.: Sztuczna inteligencja, Laboratorium. \url{https://materialy.kia.prz.edu.pl/pracownik/pliki/34/\%C4\%86WICZENIE\%208.1.pdf}. Dostęp 21.03.2026.
-\bibitem{zajdelLab9} Zajdel R.: Sztuczna inteligencja, Laboratorium. \url{https://materialy.kia.prz.edu.pl/pracownik/pliki/34/\%C4\%86WICZENIE\%209.pdf}. Dostęp 21.03.2026.
+\bibitem{zajdelLab} Zajdel R.: Sztuczna inteligencja, Laboratorium. Sieć neuronowa jednokierunkowa jednowarstwowa. \url{https://materialy.kia.prz.edu.pl/pracownik/pliki/34/%C4%86WICZENIE%208.1.pdf}. Dostęp 21.03.2026.
+\bibitem{zajdelLab9} Zajdel R.: Sztuczna inteligencja, Laboratorium. Sieć neuronowa jednokierunkowa wielowarstwowa. \url{https://materialy.kia.prz.edu.pl/pracownik/pliki/34/%C4%86WICZENIE%209.pdf}. Dostęp 21.03.2026.
+\bibitem{zajdelLabm} Zajdel R.: Sztuczna inteligencja, Laboratorium. Przyśpieszanie procesu uczenia. \url{https://materialy.kia.prz.edu.pl/pracownik/pliki/34/ĆWICZENIE%2010.pdf}. Dostęp 21.03.2026.
 \end{thebibliography}
 
 \end{document} 
