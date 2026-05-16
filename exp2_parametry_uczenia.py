@@ -9,8 +9,8 @@ from mlp_core import mlp_m_3w
 x, y_t, x_norm, x_n_s, y_t_s = hkl.load('kongres.hkl')
 x = x_norm
 
-K1_fixed = 10
-K2_fixed = 4
+K1_fixed = 5
+K2_fixed = 6
 max_epoch = 400
 err_goal = 1
 disp_freq = 10 

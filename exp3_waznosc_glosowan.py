@@ -11,8 +11,8 @@ x, y_t, x_norm, x_n_s, y_t_s = hkl.load('kongres.hkl')
 x_oryginalne = x_norm.copy()
 liczba_cech = x_oryginalne.shape[0]
 
-K1_fixed = 10
-K2_fixed = 4
+K1_fixed = 5
+K2_fixed = 6
 max_epoch = 60
 err_goal = 1
 disp_freq = 10 

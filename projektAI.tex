@@ -27,7 +27,7 @@
 
 \section{Cel projektu}
 
-Celem projektu jest realizacja sieci neuronowej do klasyfikacji głosowań kongresowych. Głównym wyzwaniem badawczym jest przewidzenie przynależności partyjnej kongresmena (demokrata czy republikanin) na podstawie jego głosowań w 16 kluczowych kwestiach w 1984 roku. Dodatkowym zadaniem jest zbadanie wpływu różnych parametrów sieci na skuteczność klasyfikacji. Projekt ma na celu nie tylko osiągnięcie wysokiej dokładności klasyfikacji, ale także zrozumienie, które cechy głosowań są najbardziej istotne dla rozróżnienia między partiami politycznymi. Sieć zrealizowana została w języku Python.
+Celem projektu jest realizacja sieci neuronowej do klasyfikacji głosowań kongresowych. Głównym wyzwaniem badawczym jest przewidzenie przynależności partyjnej kongresmena (demokrata czy republikanin) na podstawie jego głosowań w 16 kluczowych kwestiach w 1984 roku. Dodatkowym zadaniem jest zbadanie wpływu różnych parametrów sieci na skuteczność klasyfikacji. Projekt ma na celu nie tylko osiągnięcie wysokiej dokładności klasyfikacji, ale także zrozumienie, które cechy głosowań są najbardziej istotne dla rozróżnienia między partiami politycznymi. Sieć zrealizowana została w~języku Python.
 
 \section{Dane}
 \subsection{Zestaw danych}
@@ -45,7 +45,7 @@ Zestaw zawiera 435 rekordów, z czego 61,4\% (267) należy do klasy demokratów,
 
 Opis poszczególnych atrybutów głosowań jest następujący:
 \begin{itemize}[label={\textbullet}]
-\item \texttt{handicapped-infants} -- ustawa dotycząca ochrony i leczenia noworodków z niepełnosprawnościami (tak/nie)
+\item \texttt{handicapped-infants} -- ustawa dotycząca ochrony i leczenia noworodków z~niepełnosprawnościami (tak/nie)
 \item \texttt{water-project-cost-sharing} -- podział kosztów projektów wodnych między budżet federalny a lokalny (tak/nie)
 \item \texttt{adoption-of-the-budget-resolution} -- głosowanie nad ogólnym planem budżetowym państwa na dany rok (tak/nie)
 \item \texttt{physician-fee-freeze} -- zamrożenie stawek opłat pobieranych przez lekarzy w ramach programu Medicare (tak/nie)
@@ -140,7 +140,7 @@ label={lst:hkl_py}
 ]{hkl.py}
 
 
-Skrypt zapisuje dane w postaci listy: \texttt{[x, y\_t, x\_norm, x\_n\_s, y\_t\_s]}. W tym projekcie przyjęto \texttt{x\_norm = x}, a część oznaczona jako zbiór testowy w pliku \texttt{.hkl} jest taka sama jak zbiór pełny (\texttt{x\_n\_s = x\_norm}, \texttt{y\_t\_s = y\_t}). Nie wykonano tu stałego podziału typu train/test, ponieważ właściwy podział realizowany jest później dynamicznie w trakcie walidacji krzyżowej \texttt{StratifiedKFold}.
+Skrypt zapisuje dane w postaci listy: \texttt{[x, y\_t, x\_norm, x\_n\_s, y\_t\_s]}. W~tym projekcie przyjęto \texttt{x\_norm = x}, a część oznaczona jako zbiór testowy w pliku \texttt{.hkl} jest taka sama jak zbiór pełny (\texttt{x\_n\_s = x\_norm}, \texttt{y\_t\_s = y\_t}). Nie wykonano tu stałego podziału typu train/test, ponieważ właściwy podział realizowany jest później dynamicznie w trakcie walidacji krzyżowej \texttt{StratifiedKFold}.
 
 \subsection{Wizualizacja danych}
 W celu lepszego zrozumienia rozkładu głosowań w zbiorze danych, przeprowadzono wizualizację procentowego udziału głosów wewnątrz każdej partii dla poszczególnych kwestii. Wykresy te pozwalają na szybkie zidentyfikowanie, które kwestie były bardziej kontrowersyjne i jak różniły się stanowiska demokratów i republikanów.
@@ -397,7 +397,7 @@ W ten sposób kolejne epoki uczenia prowadzą do stopniowego zmniejszania błęd
 
 \subsection{Sieci neuronowe jednokierunkowe wielowarstwowe}
 
-W sieci jednokierunkowej wielowarstwowej każda warstwa ma własną macierz wag $\mathbf{W}^{(l)}$, wektor przesunięć $\mathbf{b}^{(l)}$, funkcję aktywacji $f^{(l)}(\cdot)$ oraz wektor wyjściowy $\mathbf{y}^{(l)}$. W analizowanym modelu występują jedna warstwa wejściowa, jedna warstwa ukryta oraz jedna warstwa wyjściowa, oznaczone odpowiednio jako $1,2,3$. Propagacja sygnału przebiega więc od wejścia do wyjścia \cite{zajdelLab9}.
+W sieci jednokierunkowej wielowarstwowej każda warstwa ma własną macierz wag $\mathbf{W}^{(l)}$, wektor przesunięć $\mathbf{b}^{(l)}$, funkcję aktywacji $f^{(l)}(\cdot)$ oraz wektor wyjściowy $\mathbf{y}^{(l)}$. W~analizowanym modelu występują jedna warstwa wejściowa, jedna warstwa ukryta oraz jedna warstwa wyjściowa, oznaczone odpowiednio jako $1,2,3$. Propagacja sygnału przebiega więc od wejścia do wyjścia \cite{zajdelLab9}.
 
 \begin{figure}[h!]
 \centering
@@ -577,7 +577,7 @@ W praktyce często przyjmuje się $m_c\approx 0{,}9$--$0{,}95$, co zwykle zwięk
 Implementację modelu wydzielono do osobnego modułu. Taki podział upraszcza prowadzenie eksperymentów. Jest to baza, która umożliwia utworzenie różnych wersji sieci bez powielania kodu odpowiedzialnego za sam algorytm uczenia.
 
 \subsection{Klasa implementująca sieć MLP}
-Głównym komponentem odpowiedzialnym za architekturę i logikę sieci neuronowej jest moduł opisany listingiem \ref{lst:mlp_core_py}, w którym zdefiniowano klasę implementującą sieć MLP. Zawiera ona strukturę wielowarstwowego perceptronu składającą się z jednej warstwy wejściowej, jednej warstwy ukrytej oraz jednej warstwy wyjściowej. Moduł ten zapewnia środowisko do pracy z modelem, obejmujące procesy inicjalizacji wag i biasów oraz algorytmy uczenia oparte na wstecznej propagacji błędu z mechanizmem momentum. Całość implementacji została zoptymalizowana pod kątem obliczeniowym poprzez wykorzystanie zewnętrznych funkcji pomocniczych, które wspierają operacje matematyczne i aktualizację parametrów sieci.
+Głównym komponentem odpowiedzialnym za architekturę i logikę sieci neuronowej jest moduł opisany listingiem \ref{lst:mlp_core_py}, w którym zdefiniowano klasę implementującą sieć MLP. Zawiera ona strukturę wielowarstwowego perceptronu składającą się z jednej warstwy wejściowej, jednej warstwy ukrytej oraz jednej warstwy wyjściowej. Moduł ten zapewnia środowisko do pracy z modelem, obejmujące procesy inicjalizacji wag i~biasów oraz algorytmy uczenia oparte na wstecznej propagacji błędu z mechanizmem momentum. Całość implementacji została zoptymalizowana pod kątem obliczeniowym poprzez wykorzystanie zewnętrznych funkcji pomocniczych, które wspierają operacje matematyczne i aktualizację parametrów sieci.
 
 \lstinputlisting[
 language=Python,
@@ -598,7 +598,7 @@ Ważnym aspektem jest tutaj mechanizm zarządzania wagami. System pozwala na ich
 
 Właściwy proces optymalizacji parametrów odbywa się w metodzie \texttt{train}. Działa ona iteracyjnie, gdzie w każdej epoce obliczany jest błąd $e$, suma kwadratów błędów (SSE) oraz skuteczność klasyfikacji (PK). Na podstawie tych danych wyznaczany jest gradient błędu metodą wstecznej propagacji, a następnie dokonywana jest aktualizacja wag i biasów. 
 
-Przykładowe uruchomienie programu wykorzystuje sieć o parametrach $K_1=4$, $K_2=4$, współczynniku uczenia $lr=10^{-3}$, współczynniku momentum $mc=0{,}9$, progu błędu $err\_goal=1$ oraz maksymalnie $400$ epokach uczenia. Zbiór danych został podzielony na część treningową i testową w proporcji $80/20$. Przebieg wartości $SSE$ w kolejnych epokach przedstawia rysunek \ref{fig:sse_test}.
+Przykładowe uruchomienie programu wykorzystuje sieć o parametrach $K_1=4$, $K_2=4$, współczynniku uczenia $lr=10^{-3}$, współczynniku momentum $mc=0{,}9$, progu błędu $err\_goal=1$ oraz maksymalnie $400$ epokach uczenia. Zbiór danych został podzielony na część treningową i testową w proporcji $80/20$. Przebieg wartości $SSE$ w~kolejnych epokach przedstawia rysunek \ref{fig:sse_test}.
 
 \begin{figure}[h!]
 \centering
@@ -642,7 +642,7 @@ W modelu klasy MLP wykorzystywane są następujące funkcje:
 \begin{itemize}[label={\textbullet}]
 \item \texttt{nwtan(s, p)}:
 Inicjalizacja wag i biasów dla warstw ukrytych z aktywacją \texttt{tansig}.
-Funkcja tworzy rozkład startowych wag o skali dopasowanej do liczby wejść i neuronów,
+Funkcja tworzy rozkład startowych wag o skali dopasowanej do liczby wejść i~neuronów,
 co poprawia stabilność pierwszych epok uczenia.
 
 \item \texttt{tansig(n, b)}:
@@ -725,21 +725,21 @@ Wynik eksperymentu przedstawiono na rysunku \ref{fig:exp1_k1k2_surface}.
 
 
 Na podstawie uzyskanych wyników jako konfigurację optymalną do kolejnych eksperymentów
-przyjęto \texttt{K1 = 10} oraz \texttt{K2 = 4}.
+przyjęto \texttt{K1 = 5} oraz \texttt{K2 = 6}.
 
-Uzyskano maksymalną skuteczność na poziomie 96,08\%.
+Uzyskano maksymalną skuteczność na poziomie 96,31\%.
 
 \subsection{Eksperyment nr 2}
 
 W eksperymencie badano wpływ parametrów uczenia na skuteczność klasyfikacji,
-przy ustalonej architekturze z eksperymentu nr 1 (\texttt{K1 = 10}, \texttt{K2 = 4}).
+przy ustalonej architekturze z eksperymentu nr 1 (\texttt{K1 = 5}, \texttt{K2 = 6}).
 Przeszukiwano pary wartości współczynnika uczenia \texttt{lr} oraz współczynnika momentum \texttt{mc}
 i wybierano konfigurację o najwyższej średniej skuteczności \texttt{PK}.
 
 W badaniu przyjęto następującą konfigurację:
 \begin{itemize}[label={\textbullet}]
-\item stała architektura sieci: \texttt{K1 = 10}, \texttt{K2 = 4},
-\item stałe warunki uczenia: \texttt{max\_epoch = 400}, \texttt{err\_goal = 0.05},
+\item stała architektura sieci: \texttt{K1 = 5}, \texttt{K2 = 6},
+\item stałe warunki uczenia: \texttt{max\_epoch = 400}, \texttt{err\_goal = 1},
 \item przeszukiwana siatka parametrów: $lr \in [10^{-5}, 10^{-2}]$ (skala logarytmiczna),
 \item przeszukiwana siatka parametrów: $mc \in \{0.05, 0.10, \ldots, 0.95\}$,
 \item ocena jakości: średnia skuteczność \texttt{PK [\%]} z \texttt{10}-krotnej walidacji krzyżowej.
@@ -782,7 +782,7 @@ Uzyskano maksymalną skuteczność na poziomie 96,54\%.
 
 W eksperymencie przeprowadzono analizę ważności poszczególnych głosowań, aby sprawdzić, które cechy wejściowe mają największy wpływ
 na decyzję sieci neuronowej. Celem było oszacowanie, o ile pogarsza się skuteczność
-klasyfikacji po usunięciu informacji o pojedynczym głosowaniu.
+klasyfikacji po usunięciu informacji o~pojedynczym głosowaniu.
 
 W badaniu przyjęto następującą procedurę:
 \begin{itemize}[label={\textbullet}]
@@ -901,7 +901,7 @@ Rysunek \ref{fig:exp5_k1k2} pokazuje wpływ architektury sieci na skuteczność 
 
 
 
-Rysunek \ref{fig:exp5_lrmc} wizualizuje wpływ wspólpracy współczynnika uczenia i momentum na skuteczność, uśredniając wyniki dla wszystkich konfiguracji architektury. Ten wykres pokazuje, czy istnieje optymalny obszar w przestrzeni parametrów (lr, mc), w którym sieć osiąga najlepsze rezultaty. Pozwala to zrozumieć, które kombinacje parametrów uczenia są najbardziej efektywne.
+Rysunek \ref{fig:exp5_lrmc} wizualizuje wpływ wspólpracy współczynnika uczenia i momentum na skuteczność, uśredniając wyniki dla wszystkich konfiguracji architektury. Ten wykres pokazuje, czy istnieje optymalny obszar w przestrzeni parametrów (lr, mc), w~którym sieć osiąga najlepsze rezultaty. Pozwala to zrozumieć, które kombinacje parametrów uczenia są najbardziej efektywne.
 
 \begin{figure}[htbp]
 \centering
@@ -928,7 +928,7 @@ Rysunek \ref{fig:exp5_k1_scatter} przedstawia rozkład punktowy wszystkich kombi
 \label{fig:exp5_k1_scatter}
 \end{figure}
 
-Rysunek \ref{fig:exp5_k2_scatter} analogicznie do poprzedniego pokazuje rozkład skuteczności w funkcji K2 dla wszystkich kombinacji pozostałych parametrów. Porównanie tego wykresu pozwala ocenić, czy druga warstwa ukryta ma podobny czy różny wpływ na skuteczność w porównaniu z pierwszą warstwą.
+Rysunek \ref{fig:exp5_k2_scatter} analogicznie do poprzedniego pokazuje rozkład skuteczności w~funkcji K2 dla wszystkich kombinacji pozostałych parametrów. Porównanie tego wykresu pozwala ocenić, czy druga warstwa ukryta ma podobny czy różny wpływ na skuteczność w porównaniu z pierwszą warstwą.
 
 \begin{figure}[htbp]
 \centering

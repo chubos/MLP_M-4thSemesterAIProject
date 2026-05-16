@@ -12,7 +12,7 @@ X_all = x_norm.T
 Y_all = y_t.T     
 
 # 2. Parametry sieci
-K1_fixed, K2_fixed = 10, 4
+K1_fixed, K2_fixed = 5, 6
 max_epoch = 80
 err_goal = 1
 disp_freq = 10 
