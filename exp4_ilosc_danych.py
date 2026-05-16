@@ -4,20 +4,20 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from sklearn.model_selection import train_test_split
 
-from mlp_core import mlp_m_3w # IMPORT NASZEJ SIECI
+from mlp_core import mlp_m_3w
 
 x, y_t, x_norm, x_n_s, y_t_s = hkl.load('kongres.hkl')
 
 X_all = x_norm.T  
 Y_all = y_t.T     
 
-# 2. Parametry sieci
+# Parametry sieci
 K1_fixed, K2_fixed = 5, 6
 max_epoch = 80
 err_goal = 1
 disp_freq = 10 
 lr_fixed = 1e-4
-mc_fixed = 0.45
+mc_fixed = 0.25
 
 
 X_train_pula, X_test, Y_train_pula, Y_test = train_test_split(

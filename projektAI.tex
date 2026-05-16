@@ -716,9 +716,9 @@ Dla każdej pary \texttt{(K1, K2)} skrypt uczy model i oblicza skuteczność \te
 
 Wynik eksperymentu przedstawiono na rysunku \ref{fig:exp1_k1k2_surface}.
 
-\begin{figure}[h!]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth]{Fig.1_PK_K1K2_kongres.png}
+\includegraphics[width=0.7\textwidth]{Fig.1_PK_K1K2_kongres.png}
 \caption{Skuteczność \texttt{PK [\%]} w funkcji liczby neuronów \texttt{K1} i \texttt{K2}}
 \label{fig:exp1_k1k2_surface}
 \end{figure}
@@ -740,7 +740,7 @@ W badaniu przyjęto następującą konfigurację:
 \begin{itemize}[label={\textbullet}]
 \item stała architektura sieci: \texttt{K1 = 5}, \texttt{K2 = 6},
 \item stałe warunki uczenia: \texttt{max\_epoch = 400}, \texttt{err\_goal = 1},
-\item przeszukiwana siatka parametrów: $lr \in [10^{-5}, 10^{-2}]$ (skala logarytmiczna),
+\item przeszukiwana siatka parametrów: $lr \in [10^{-5}, 10^{-1}]$ (skala logarytmiczna),
 \item przeszukiwana siatka parametrów: $mc \in \{0.05, 0.10, \ldots, 0.95\}$,
 \item ocena jakości: średnia skuteczność \texttt{PK [\%]} z \texttt{10}-krotnej walidacji krzyżowej.
 \end{itemize}
@@ -763,9 +763,9 @@ Dla każdej pary \texttt{(lr, mc)} z dwuwymiarowej siatki hiperparametrów skryp
 
 Wyniki eksperymentu przedstawiono na rysunku \ref{fig:exp2_lrmc_surface}.
 
-\begin{figure}[h!]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.9\textwidth]{Fig.2_PK_lrmc_kongres.png}
+\includegraphics[width=0.8\textwidth]{Fig.2_PK_lrmc_kongres.png}
 \caption{Skuteczność \texttt{PK [\%]} w funkcji \texttt{log10(lr)} i \texttt{mc}}
 \label{fig:exp2_lrmc_surface}
 \end{figure}
@@ -774,7 +774,7 @@ Analiza powierzchni wskazuje, że model osiąga wysoką skuteczność w relatywn
 jednak dla zbyt dużych wartości \texttt{lr} pojawiają się wyraźne spadki \texttt{PK}. Oznacza to,
 że zbyt agresywne kroki aktualizacji wag destabilizują uczenie i pogarszają jakość klasyfikacji.
 
-Na podstawie uzyskanych wyników otrzymano optymalną konfigurację parametrów uczenia: \texttt{lr = 0.0001} oraz \texttt{mc = 0.45}.
+Na podstawie uzyskanych wyników otrzymano optymalną konfigurację parametrów uczenia: \texttt{lr = 0.0001} oraz \texttt{mc = 0.25}.
 
 Uzyskano maksymalną skuteczność na poziomie 96,54\%.
 
@@ -868,7 +868,7 @@ W badaniu przyjęto następującą konfigurację:
 \item przeszukiwane parametry architektury: $K1, K2 \in \{1, 2, \ldots, 10\}$,
 \item przeszukiwane parametry uczenia: $lr \in [10^{-5}, 10^{-2}]$,
 \item przeszukiwane parametry uczenia: $mc \in \{0.05, 0.10, \ldots, 0.95\}$,
-\item stałe warunki uczenia: \texttt{max\_epoch = 400}, \texttt{err\_goal = 0.05},
+\item stałe warunki uczenia: \texttt{max\_epoch = 400}, \texttt{err\_goal = 1},
 \item ocena jakości: średnia skuteczność \texttt{PK [\%]} z \texttt{10}-krotnej walidacji krzyżowej,
 \item liczba sprawdzonych kombinacji: $10 \times 10 \times 10 \times 19 = 19\,000$.
 \end{itemize}
@@ -943,7 +943,7 @@ Najlepszą konfigurację uzyskano dla \texttt{K1 = 7}, \texttt{K2 = 1}, \texttt{
 
 \section{Podsumowanie i wnioski}
 
-W projekcie zbudowano i przeanalizowano sieć MLP do klasyfikacji głosowań kongresowych, a uzyskane wyniki pokazały, że model osiąga bardzo wysoką skuteczność przy odpowiednio dobranych hiperparametrach. Najlepszy rezultat wyniósł \texttt{97,01\%} i został osiągnięty dla konfiguracji \texttt{K1 = 7}, \texttt{K2 = 1}, \texttt{lr = 0.0001} oraz \texttt{mc = 0.35}. Oznacza to, że dla tego zadania korzystniejsza jest architektura z większą pierwszą warstwą ukrytą i małą drugą warstwą.
+W projekcie zbudowano i przeanalizowano sieć MLP do klasyfikacji głosowań kongresowych, a uzyskane wyniki pokazały, że model osiąga bardzo wysoką skuteczność przy odpowiednio dobranych hiperparametrach. Najlepszy rezultat wyniósł \texttt{97,01\%} i został osiągnięty dla konfiguracji \texttt{K1 = 7}, \texttt{K2 = 1}, \texttt{lr = 0.0001} oraz \texttt{mc = 0.35}. Oznacza to, że dla tego zadania korzystniejsza jest architektura z większą pierwszą warstwą i małą drugą warstwą.
 
 Wyniki eksperymentów pokazały też, że sieć bardzo często osiągała wysokie wartości skuteczności, a histogram rozkładu wyników był wyraźnie skupiony, a nie rozrzucony. Taki obraz sugeruje, że model nie jest silnie podatny na drobne zmiany parametrów i zachowuje stabilność w szerokim obszarze przestrzeni hiperparametrów. Całość potwierdza więc, że dobrze dobrany MLP może być skutecznym i odpornym na zakłócenia rozwiązaniem dla tego problemu klasyfikacji.
 

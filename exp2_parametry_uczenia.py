@@ -15,7 +15,7 @@ max_epoch = 400
 err_goal = 1
 disp_freq = 10 
 
-lr_vec = np.logspace(-5, -2, 10) 
+lr_vec = np.logspace(-5, -1, 9) 
 mc_vec = np.arange(0.05, 1.0, 0.05)
 
 CVN = 10
