@@ -598,7 +598,7 @@ Ważnym aspektem jest tutaj mechanizm zarządzania wagami. System pozwala na ich
 
 Właściwy proces optymalizacji parametrów odbywa się w metodzie \texttt{train}. Działa ona iteracyjnie, gdzie w każdej epoce obliczany jest błąd $e$, suma kwadratów błędów (SSE) oraz skuteczność klasyfikacji (PK). Na podstawie tych danych wyznaczany jest gradient błędu metodą wstecznej propagacji, a następnie dokonywana jest aktualizacja wag i biasów. 
 
-Przykładowe uruchomienie programu wykorzystuje sieć o parametrach $K_1=4$, $K_2=4$, współczynniku uczenia $lr=10^{-3}$, współczynniku momentum $mc=0{,}9$, progu błędu $err\_goal=0{,}05$ oraz maksymalnie $400$ epokach uczenia. Zbiór danych został podzielony na część treningową i testową w proporcji $80/20$. Przebieg wartości $SSE$ w kolejnych epokach przedstawia rysunek \ref{fig:sse_test}.
+Przykładowe uruchomienie programu wykorzystuje sieć o parametrach $K_1=4$, $K_2=4$, współczynniku uczenia $lr=10^{-3}$, współczynniku momentum $mc=0{,}9$, progu błędu $err\_goal=1$ oraz maksymalnie $400$ epokach uczenia. Zbiór danych został podzielony na część treningową i testową w proporcji $80/20$. Przebieg wartości $SSE$ w kolejnych epokach przedstawia rysunek \ref{fig:sse_test}.
 
 \begin{figure}[h!]
 \centering

@@ -112,7 +112,7 @@ if __name__ == '__main__':
     x, y_t, x_norm, x_n_s, y_t_s = hkl.load('kongres.hkl')
     K1_test, K2_test = 4, 4
     lr_test, mc_test = 1e-3, 0.9
-    err_goal_test = 0.05
+    err_goal_test = 1
     disp_freq_test = 10
     max_epoch_test = 400
     initialize_test = True
